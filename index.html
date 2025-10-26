@@ -6,16 +6,796 @@
     <title>نظام إدارة الحضور والغياب - إدارة النجيلة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-    <style>
-        /* جميع أنماط CSS الخاصة بك تبقى كما هي */
-        /* ... CSS الكامل من الملف الأصلي ... */
+     <style>
+        :root {
+            --primary: #2E7D32;
+            --primary-dark: #1B5E20;
+            --secondary: #1976D2;
+            --secondary-dark: #0D47A1;
+            --accent: #FF9800;
+            --warning: #F44336;
+            --text: #333333;
+            --text-light: #666666;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-20px, -20px) rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        .tabs {
+            background: var(--light);
+            border-bottom: 3px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .tab {
+            padding: 20px 35px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text);
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tab:hover {
+            background: rgba(46, 125, 50, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 -3px 0 var(--primary) inset;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 40px;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1em;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        input:read-only {
+            background-color: #f8f9fa;
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #C62828 100%);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 0.9em;
+        }
+        
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: var(--shadow);
+            border-radius: 15px;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .attendance-table th {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .attendance-table td {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+        
+        .attendance-table tr:hover {
+            background: rgba(46, 125, 50, 0.05);
+            transform: scale(1.01);
+        }
+        
+        .attendance-input {
+            width: 120px;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            border-left: 5px solid var(--secondary);
+            box-shadow: var(--shadow);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-top: 5px solid var(--primary);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 15px 0;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 600;
+            border: 2px solid transparent;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .alert-success {
+            background: #E8F5E8;
+            color: var(--primary);
+            border-color: #C8E6C9;
+        }
+        
+        .alert-error {
+            background: #FFEBEE;
+            color: var(--warning);
+            border-color: #FFCDD2;
+        }
+        
+        .alert-info {
+            background: #E3F2FD;
+            color: var(--secondary);
+            border-color: #BBDEFB;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--primary);
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        
+        .school-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 5px;
+        }
+        
+        .badge-primary { background: #E8F5E8; color: var(--primary); }
+        .badge-secondary { background: #E3F2FD; color: var(--secondary); }
+        .badge-warning { background: #FFF3E0; color: var(--accent); }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+        
+        .verification-section {
+            background: #FFF3E0;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid var(--accent);
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .tab { 
+                padding: 15px 20px; 
+                font-size: 1em; 
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .tab-content { 
+                padding: 25px; 
+            }
+            
+            .header h1 { 
+                font-size: 2.2em; 
+            }
+            
+            .header p {
+                font-size: 1.1em;
+            }
+            
+            .stats-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 15px 25px;
+                font-size: 1em;
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- كل محتوى HTML تبقى كما هي -->
-        <!-- ... محتوى HTML الكامل من الملف الأصلي ... -->
+           <div class="container">
+        <!-- الرأس -->
+        <div class="header">
+            <h1><i class="fas fa-graduation-cap"></i> نظام إدارة الحضور والغياب</h1>
+            <p>نظام متكامل لإدارة حضور الطلاب وإعداد التقارير الإحصائية للمدارس</p>
+        </div>
+        
+        <!-- التبويبات -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('entry')">
+                <i class="fas fa-edit"></i> تسجيل الحضور
+            </button>
+            <button class="tab" onclick="showTab('reports')">
+                <i class="fas fa-chart-bar"></i> التقارير
+            </button>
+            <button class="tab" onclick="showTab('stats')">
+                <i class="fas fa-chart-pie"></i> الإحصائيات
+            </button>
+            <button class="tab" onclick="showTab('schools')">
+                <i class="fas fa-school"></i> إدارة المدارس
+            </button>
+        </div>
+
+        <!-- تبويب تسجيل الحضور -->
+        <div id="entry-tab" class="tab-content active">
+            <h2 style="color: var(--primary); margin-bottom: 25px;">
+                <i class="fas fa-edit"></i> تسجيل الحضور اليومي
+            </h2>
+            
+            <!-- أزرار التحكم -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="verifyConnection()" style="margin: 5px;">
+                    <i class="fas fa-plug"></i> التحقق من الاتصال
+                </button>
+                <button class="btn" onclick="checkAndFixData()" style="margin: 5px;">
+                    <i class="fas fa-search"></i> التحقق من البيانات
+                </button>
+                <button class="btn btn-outline" onclick="createSampleData()" style="margin: 5px;">
+                    <i class="fas fa-magic"></i> بيانات تجريبية
+                </button>
+            </div>
+            
+            <div class="summary-card">
+                <h3><i class="fas fa-info-circle"></i> تعليمات التسجيل</h3>
+                <p>• اختر المرحلة التعليمية أولاً</p>
+                <p>• اختر المدرسة من القائمة</p>
+                <p>• أدخل الرقم المسلسل للمدرسة للتحقق</p>
+                <p>• بعد التحقق الناجح، أدخل بيانات الحضور</p>
+            </div>
+            
+            <div class="grid-3">
+                <div class="form-group">
+                    <label for="date"><i class="fas fa-calendar"></i> التاريخ</label>
+                    <input type="date" id="date" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="educationStage"><i class="fas fa-layer-group"></i> المرحلة التعليمية</label>
+                    <select id="educationStage" onchange="loadSchoolsByStage()">
+                        <option value="">-- اختر المرحلة --</option>
+                        <option value="رياض اطفال">رياض أطفال</option>
+                        <option value="ابتدائى">ابتدائي</option>
+                        <option value="اعدادى">إعدادي</option>
+                        <option value="ثانوى">ثانوي</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="school"><i class="fas fa-school"></i> اسم المدرسة</label>
+                    <select id="school" onchange="resetVerification()">
+                        <option value="">-- اختر المدرسة --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="verification-section" class="verification-section" style="display: none;">
+                <h3 style="color: var(--accent); margin-bottom: 15px;">
+                    <i class="fas fa-shield-alt"></i> التحقق من الهوية
+                </h3>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="schoolSerial"><i class="fas fa-key"></i> الرقم المسلسل للمدرسة</label>
+                        <input type="text" id="schoolSerial" placeholder="أدخل الرقم المسلسل">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-secondary" onclick="verifySchoolSerial()">
+                            <i class="fas fa-check-circle"></i> التحقق
+                        </button>
+                    </div>
+                </div>
+                <div id="verification-result"></div>
+            </div>
+
+            <div id="attendance-section" style="display: none;">
+                <div class="summary-card">
+                    <h3><i class="fas fa-check-circle"></i> التحقق ناجح</h3>
+                    <p id="verified-school-info" style="font-weight: bold; font-size: 1.1em;"></p>
+                    <p>يمكنك الآن إدخال بيانات الحضور</p>
+                </div>
+                
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>الصف الدراسي</th>
+                            <th>عدد المقيدين</th>
+                            <th>عدد الحاضرين</th>
+                            <th>عدد الغائبين</th>
+                            <th>نسبة الحضور</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-body">
+                        <!-- سيتم ملؤها بالبيانات -->
+                    </tbody>
+                </table>
+                
+                <div class="summary-card">
+                    <h3><i class="fas fa-chart-line"></i> ملخص الحضور</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">إجمالي المقيدين</div>
+                            <div class="stat-number" id="total-enrolled">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">إجمالي الحاضرين</div>
+                            <div class="stat-number" id="total-present">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">إجمالي الغائبين</div>
+                            <div class="stat-number" id="total-absent">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">نسبة الحضور</div>
+                            <div class="stat-number" id="attendance-rate">0%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="saveAttendance()">
+                        <i class="fas fa-save"></i> حفظ البيانات
+                    </button>
+                    <button class="btn btn-outline" onclick="resetForm()">
+                        <i class="fas fa-redo"></i> بدء تسجيل جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+
+<!-- تبويب التقارير -->
+<div id="reports-tab" class="tab-content">
+    <h2 style="color: var(--primary); margin-bottom: 25px;">
+        <i class="fas fa-chart-bar"></i> التقارير والإحصائيات
+    </h2>
+    
+    <div class="summary-card">
+        <h3><i class="fas fa-info-circle"></i> تعليمات استخدام التقارير</h3>
+        <p>• اختر الفترة الزمنية المطلوبة</p>
+        <p>• يمكن التصفية بالمدرسة أو المرحلة أو تركها لجميع البيانات</p>
+        <p>• التقرير الأفقي مناسب للعرض على الشاشة والطباعة</p>
+        <p>• التقرير الرأسي مناسب للتحليل التفصيلي</p>
     </div>
+    
+    <div class="grid-3">
+        <div class="form-group">
+            <label for="startDate"><i class="fas fa-calendar-alt"></i> من تاريخ</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+            <label for="endDate"><i class="fas fa-calendar-alt"></i> إلى تاريخ</label>
+            <input type="date" id="endDate">
+        </div>
+        <div class="form-group">
+            <label for="reportSchool"><i class="fas fa-school"></i> تصفية بالمدرسة</label>
+            <select id="reportSchool">
+                <option value="">جميع المدارس</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="grid-2">
+        <div class="form-group">
+            <label for="reportStage"><i class="fas fa-layer-group"></i> تصفية بالمرحلة</label>
+            <select id="reportStage">
+                <option value="">جميع المراحل</option>
+                <option value="رياض اطفال">رياض أطفال</option>
+                <option value="ابتدائى">ابتدائي</option>
+                <option value="اعدادى">إعدادي</option>
+                <option value="ثانوى">ثانوي</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reportType"><i class="fas fa-table"></i> نوع التقرير</label>
+            <select id="reportType">
+                <option value="detailed">تقرير مفصل (أفقي)</option>
+                <option value="vertical">تقرير تفصيلي (رأسي)</option>
+            </select>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <button class="btn" onclick="generateDetailedReport()">
+            <i class="fas fa-chart-bar"></i> إنشاء التقرير
+        </button>
+        <button class="btn btn-secondary" onclick="exportDetailedReport()">
+            <i class="fas fa-file-excel"></i> تصدير لإكسل
+        </button>
+        <button class="btn btn-outline" onclick="printDetailedReport()">
+            <i class="fas fa-print"></i> طباعة التقرير
+        </button>
+    </div>
+    
+    <div id="report-result"></div>
+</div>
+
+        <!-- تبويب الإحصائيات -->
+        <div id="stats-tab" class="tab-content">
+            <h2 style="color: var(--primary); margin-bottom: 25px;">
+                <i class="fas fa-chart-pie"></i> الإحصائيات العامة
+            </h2>
+            
+            <button class="btn" onclick="loadStatistics()">
+                <i class="fas fa-sync-alt"></i> تحديث الإحصائيات
+            </button>
+            
+            <div id="statistics-result">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل الإحصائيات...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب إدارة المدارس -->
+        <div id="schools-tab" class="tab-content">
+            <h2 style="color: var(--primary); margin-bottom: 25px;">
+                <i class="fas fa-school"></i> إدارة المدارس
+            </h2>
+            
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--secondary); margin-bottom: 20px;">
+                        <i class="fas fa-plus-circle"></i> إضافة مدرسة جديدة
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="newSchoolCode">كود المدرسة</label>
+                        <input type="text" id="newSchoolCode" placeholder="مثال: PRM003">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newSchoolName">اسم المدرسة</label>
+                        <input type="text" id="newSchoolName" placeholder="أدخل اسم المدرسة">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newSchoolStage">المرحلة التعليمية</label>
+                        <select id="newSchoolStage">
+                            <option value="رياض اطفال">رياض أطفال</option>
+                            <option value="ابتدائى">ابتدائي</option>
+                            <option value="اعدادى">إعدادي</option>
+                            <option value="ثانوى">ثانوي</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newSchoolSerial">الرقم المسلسل</label>
+                        <input type="text" id="newSchoolSerial" placeholder="أدخل الرقم المسلسل">
+                    </div>
+                    
+                    <button class="btn" onclick="addNewSchool()">
+                        <i class="fas fa-plus"></i> إضافة المدرسة
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3 style="color: var(--secondary); margin-bottom: 20px;">
+                        <i class="fas fa-list"></i> قائمة المدارس
+                    </h3>
+                    <button class="btn btn-outline" onclick="loadSchoolsList()">
+                        <i class="fas fa-sync"></i> تحديث القائمة
+                    </button>
+                    <button class="btn btn-secondary" onclick="createSampleData()">
+                        <i class="fas fa-magic"></i> بيانات تجريبية
+                    </button>
+                    <button class="btn btn-warning" onclick="clearAllData()">
+                        <i class="fas fa-trash"></i> مسح البيانات
+                    </button>
+                    <div id="schools-list" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
     <!-- نافذة التحميل -->
     <div id="loading-overlay" style="display: none;">
