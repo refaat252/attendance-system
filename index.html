@@ -1,1699 +1,485 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الحضور والغياب - إدارة النجيلة</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-     <style>
-        :root {
-            --primary: #2E7D32;
-            --primary-dark: #1B5E20;
-            --secondary: #1976D2;
-            --secondary-dark: #0D47A1;
-            --accent: #FF9800;
-            --warning: #F44336;
-            --text: #333333;
-            --text-light: #666666;
-            --light: #f8f9fa;
-            --border: #dee2e6;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            line-height: 1.6;
-            color: var(--text);
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            animation: float 20s linear infinite;
-        }
-        
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-20px, -20px) rotate(360deg); }
-        }
-        
-        .header h1 {
-            font-size: 3em;
-            margin-bottom: 15px;
-            font-weight: 700;
-            position: relative;
-        }
-        
-        .header p {
-            font-size: 1.3em;
-            opacity: 0.9;
-            position: relative;
-        }
-        
-        .tabs {
-            background: var(--light);
-            border-bottom: 3px solid var(--border);
-            display: flex;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .tab {
-            padding: 20px 35px;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: var(--text);
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .tab:hover {
-            background: rgba(46, 125, 50, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .tab.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 -3px 0 var(--primary) inset;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 40px;
-            animation: fadeInUp 0.5s ease;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @keyframes fadeInUp {
-            from { 
-                opacity: 0; 
-                transform: translateY(30px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
-        }
-        
-        .form-group {
-            margin-bottom: 30px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 12px;
-            font-weight: 600;
-            color: var(--text);
-            font-size: 1.1em;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 18px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        input:read-only {
-            background-color: #f8f9fa;
-            color: #666;
-            cursor: not-allowed;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 18px 35px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--shadow);
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        
-        .btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, var(--warning) 0%, #C62828 100%);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-small {
-            padding: 12px 20px;
-            font-size: 0.9em;
-        }
-        
-        .attendance-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 30px 0;
-            box-shadow: var(--shadow);
-            border-radius: 15px;
-            overflow: hidden;
-            background: white;
-        }
-        
-        .attendance-table th {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-        
-        .attendance-table td {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.3s ease;
-        }
-        
-        .attendance-table tr:hover {
-            background: rgba(46, 125, 50, 0.05);
-            transform: scale(1.01);
-        }
-        
-        .attendance-input {
-            width: 120px;
-            padding: 15px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .summary-card {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            padding: 30px;
-            border-radius: 15px;
-            margin: 25px 0;
-            border-left: 5px solid var(--secondary);
-            box-shadow: var(--shadow);
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: var(--shadow);
-            border-top: 5px solid var(--primary);
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-number {
-            font-size: 3em;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 15px 0;
-            display: block;
-        }
-        
-        .stat-label {
-            font-size: 1.1em;
-            color: var(--text-light);
-            font-weight: 600;
-        }
-        
-        .alert {
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
-            font-weight: 600;
-            border: 2px solid transparent;
-            animation: slideIn 0.5s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .alert-success {
-            background: #E8F5E8;
-            color: var(--primary);
-            border-color: #C8E6C9;
-        }
-        
-        .alert-error {
-            background: #FFEBEE;
-            color: var(--warning);
-            border-color: #FFCDD2;
-        }
-        
-        .alert-info {
-            background: #E3F2FD;
-            color: var(--secondary);
-            border-color: #BBDEFB;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: var(--primary);
-        }
-        
-        .spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid var(--primary);
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 25px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-        
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-        }
-        
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-        
-        .school-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin: 5px;
-        }
-        
-        .badge-primary { background: #E8F5E8; color: var(--primary); }
-        .badge-secondary { background: #E3F2FD; color: var(--secondary); }
-        .badge-warning { background: #FFF3E0; color: var(--accent); }
-        
-        .progress-bar {
-            width: 100%;
-            height: 12px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-        
-        .recent-activity {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .activity-item {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-        
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-        }
-        
-        .verification-section {
-            background: #FFF3E0;
-            padding: 25px;
-            border-radius: 12px;
-            border-left: 5px solid var(--accent);
-            margin: 20px 0;
-        }
-        
-        @media (max-width: 768px) {
-            .tab { 
-                padding: 15px 20px; 
-                font-size: 1em; 
-                flex: 1;
-                min-width: 120px;
-            }
-            
-            .tab-content { 
-                padding: 25px; 
-            }
-            
-            .header h1 { 
-                font-size: 2.2em; 
-            }
-            
-            .header p {
-                font-size: 1.1em;
-            }
-            
-            .stats-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn {
-                padding: 15px 25px;
-                font-size: 1em;
-            }
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-dark);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>نظام إدارة الحضور والغياب - إدارة النجيلة</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* (نفس أنماطك الموجودة في الملف الأصلي) */
+    :root { --primary: #2E7D32; --primary-dark: #1B5E20; --light:#f8f9fa; --border:#dee2e6 }
+    body{font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#667eea,#764ba2); padding:20px; color:#333}
+    .container{max-width:1400px;margin:0 auto;background:white;border-radius:20px;overflow:hidden}
+    .header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:30px;text-align:center}
+    .tabs{display:flex; background:var(--light); padding:10px}
+    .tab{padding:12px 18px; cursor:pointer; border:none; background:transparent; font-weight:700; margin:4px}
+    .tab.active{background:#fff;color:var(--primary)}
+    .tab-content{display:none;padding:25px}
+    .tab-content.active{display:block}
+    .form-group{margin-bottom:16px}
+    input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:8px;width:100%}
+    .btn{background:var(--primary); color:#fff; padding:10px 16px;border-radius:8px;border:none;cursor:pointer;margin:6px}
+    .btn-outline{background:transparent;border:1px solid var(--primary);color:var(--primary)}
+    .attendance-table{width:100%;border-collapse:collapse;margin-top:16px}
+    .attendance-table th, .attendance-table td{padding:10px;border:1px solid #eee;text-align:center}
+    .summary-card{background:#E3F2FD;padding:16px;border-radius:12px;margin:12px 0}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:768px){ .grid-2{grid-template-columns:1fr} }
+  </style>
 </head>
 <body>
-    <div class="container">
-           <div class="container">
-        <!-- الرأس -->
-        <div class="header">
-            <h1><i class="fas fa-graduation-cap"></i> نظام إدارة الحضور والغياب</h1>
-            <p>نظام متكامل لإدارة حضور الطلاب وإعداد التقارير الإحصائية للمدارس</p>
-        </div>
-        
-        <!-- التبويبات -->
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('entry')">
-                <i class="fas fa-edit"></i> تسجيل الحضور
-            </button>
-            <button class="tab" onclick="showTab('reports')">
-                <i class="fas fa-chart-bar"></i> التقارير
-            </button>
-            <button class="tab" onclick="showTab('stats')">
-                <i class="fas fa-chart-pie"></i> الإحصائيات
-            </button>
-            <button class="tab" onclick="showTab('schools')">
-                <i class="fas fa-school"></i> إدارة المدارس
-            </button>
-        </div>
-
-        <!-- تبويب تسجيل الحضور -->
-        <div id="entry-tab" class="tab-content active">
-            <h2 style="color: var(--primary); margin-bottom: 25px;">
-                <i class="fas fa-edit"></i> تسجيل الحضور اليومي
-            </h2>
-            
-            <!-- أزرار التحكم -->
-            <div style="text-align: center; margin-bottom: 20px;">
-                <button class="btn btn-secondary" onclick="verifyConnection()" style="margin: 5px;">
-                    <i class="fas fa-plug"></i> التحقق من الاتصال
-                </button>
-                <button class="btn" onclick="checkAndFixData()" style="margin: 5px;">
-                    <i class="fas fa-search"></i> التحقق من البيانات
-                </button>
-                <button class="btn btn-outline" onclick="createSampleData()" style="margin: 5px;">
-                    <i class="fas fa-magic"></i> بيانات تجريبية
-                </button>
-            </div>
-            
-            <div class="summary-card">
-                <h3><i class="fas fa-info-circle"></i> تعليمات التسجيل</h3>
-                <p>• اختر المرحلة التعليمية أولاً</p>
-                <p>• اختر المدرسة من القائمة</p>
-                <p>• أدخل الرقم المسلسل للمدرسة للتحقق</p>
-                <p>• بعد التحقق الناجح، أدخل بيانات الحضور</p>
-            </div>
-            
-            <div class="grid-3">
-                <div class="form-group">
-                    <label for="date"><i class="fas fa-calendar"></i> التاريخ</label>
-                    <input type="date" id="date" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label for="educationStage"><i class="fas fa-layer-group"></i> المرحلة التعليمية</label>
-                    <select id="educationStage" onchange="loadSchoolsByStage()">
-                        <option value="">-- اختر المرحلة --</option>
-                        <option value="رياض اطفال">رياض أطفال</option>
-                        <option value="ابتدائى">ابتدائي</option>
-                        <option value="اعدادى">إعدادي</option>
-                        <option value="ثانوى">ثانوي</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="school"><i class="fas fa-school"></i> اسم المدرسة</label>
-                    <select id="school" onchange="resetVerification()">
-                        <option value="">-- اختر المدرسة --</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="verification-section" class="verification-section" style="display: none;">
-                <h3 style="color: var(--accent); margin-bottom: 15px;">
-                    <i class="fas fa-shield-alt"></i> التحقق من الهوية
-                </h3>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="schoolSerial"><i class="fas fa-key"></i> الرقم المسلسل للمدرسة</label>
-                        <input type="text" id="schoolSerial" placeholder="أدخل الرقم المسلسل">
-                    </div>
-                    <div class="form-group" style="display: flex; align-items: flex-end;">
-                        <button class="btn btn-secondary" onclick="verifySchoolSerial()">
-                            <i class="fas fa-check-circle"></i> التحقق
-                        </button>
-                    </div>
-                </div>
-                <div id="verification-result"></div>
-            </div>
-
-            <div id="attendance-section" style="display: none;">
-                <div class="summary-card">
-                    <h3><i class="fas fa-check-circle"></i> التحقق ناجح</h3>
-                    <p id="verified-school-info" style="font-weight: bold; font-size: 1.1em;"></p>
-                    <p>يمكنك الآن إدخال بيانات الحضور</p>
-                </div>
-                
-                <table class="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>الصف الدراسي</th>
-                            <th>عدد المقيدين</th>
-                            <th>عدد الحاضرين</th>
-                            <th>عدد الغائبين</th>
-                            <th>نسبة الحضور</th>
-                        </tr>
-                    </thead>
-                    <tbody id="attendance-body">
-                        <!-- سيتم ملؤها بالبيانات -->
-                    </tbody>
-                </table>
-                
-                <div class="summary-card">
-                    <h3><i class="fas fa-chart-line"></i> ملخص الحضور</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-label">إجمالي المقيدين</div>
-                            <div class="stat-number" id="total-enrolled">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">إجمالي الحاضرين</div>
-                            <div class="stat-number" id="total-present">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">إجمالي الغائبين</div>
-                            <div class="stat-number" id="total-absent">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">نسبة الحضور</div>
-                            <div class="stat-number" id="attendance-rate">0%</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="text-align: center; margin-top: 30px;">
-                    <button class="btn" onclick="saveAttendance()">
-                        <i class="fas fa-save"></i> حفظ البيانات
-                    </button>
-                    <button class="btn btn-outline" onclick="resetForm()">
-                        <i class="fas fa-redo"></i> بدء تسجيل جديد
-                    </button>
-                </div>
-            </div>
-        </div>
-
-<!-- تبويب التقارير -->
-<div id="reports-tab" class="tab-content">
-    <h2 style="color: var(--primary); margin-bottom: 25px;">
-        <i class="fas fa-chart-bar"></i> التقارير والإحصائيات
-    </h2>
-    
-    <div class="summary-card">
-        <h3><i class="fas fa-info-circle"></i> تعليمات استخدام التقارير</h3>
-        <p>• اختر الفترة الزمنية المطلوبة</p>
-        <p>• يمكن التصفية بالمدرسة أو المرحلة أو تركها لجميع البيانات</p>
-        <p>• التقرير الأفقي مناسب للعرض على الشاشة والطباعة</p>
-        <p>• التقرير الرأسي مناسب للتحليل التفصيلي</p>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-graduation-cap"></i> نظام إدارة الحضور والغياب</h1>
+      <p>نظام متكامل لإدارة حضور الطلاب وإعداد التقارير الإحصائية للمدارس</p>
     </div>
-    
-    <div class="grid-3">
-        <div class="form-group">
-            <label for="startDate"><i class="fas fa-calendar-alt"></i> من تاريخ</label>
-            <input type="date" id="startDate">
-        </div>
-        <div class="form-group">
-            <label for="endDate"><i class="fas fa-calendar-alt"></i> إلى تاريخ</label>
-            <input type="date" id="endDate">
-        </div>
-        <div class="form-group">
-            <label for="reportSchool"><i class="fas fa-school"></i> تصفية بالمدرسة</label>
-            <select id="reportSchool">
-                <option value="">جميع المدارس</option>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('entry')"><i class="fas fa-edit"></i> تسجيل الحضور</button>
+      <button class="tab" onclick="showTab('reports')"><i class="fas fa-chart-bar"></i> التقارير</button>
+      <button class="tab" onclick="showTab('stats')"><i class="fas fa-chart-pie"></i> الإحصائيات</button>
+      <button class="tab" onclick="showTab('schools')"><i class="fas fa-school"></i> إدارة المدارس</button>
+    </div>
+
+    <!-- تسجيل -->
+    <div id="entry-tab" class="tab-content active">
+      <h2>تسجيل الحضور اليومي</h2>
+      <div style="text-align:center;margin-bottom:10px">
+        <button class="btn" onclick="verifyConnection()"><i class="fas fa-plug"></i> التحقق من الاتصال</button>
+        <button class="btn btn-outline" onclick="createSampleData()"><i class="fas fa-magic"></i> بيانات تجريبية</button>
+        <button class="btn btn-outline" onclick="checkAndFixData()"><i class="fas fa-search"></i> التحقق من البيانات</button>
+      </div>
+
+      <div class="summary-card">
+        <div class="grid-2">
+          <div>
+            <label>التاريخ</label>
+            <input type="date" id="date" readonly/>
+          </div>
+          <div>
+            <label>المرحلة التعليمية</label>
+            <select id="educationStage" onchange="loadSchoolsByStage()">
+              <option value="">-- اختر المرحلة --</option>
+              <option value="رياض اطفال">رياض أطفال</option>
+              <option value="ابتدائى">ابتدائي</option>
+              <option value="اعدادى">إعدادي</option>
+              <option value="ثانوى">ثانوي</option>
             </select>
-        </div>
-    </div>
-    
-    <div class="grid-2">
-        <div class="form-group">
-            <label for="reportStage"><i class="fas fa-layer-group"></i> تصفية بالمرحلة</label>
-            <select id="reportStage">
-                <option value="">جميع المراحل</option>
-                <option value="رياض اطفال">رياض أطفال</option>
-                <option value="ابتدائى">ابتدائي</option>
-                <option value="اعدادى">إعدادي</option>
-                <option value="ثانوى">ثانوي</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="reportType"><i class="fas fa-table"></i> نوع التقرير</label>
-            <select id="reportType">
-                <option value="detailed">تقرير مفصل (أفقي)</option>
-                <option value="vertical">تقرير تفصيلي (رأسي)</option>
-            </select>
-        </div>
-    </div>
-    
-    <div style="text-align: center; margin: 30px 0;">
-        <button class="btn" onclick="generateDetailedReport()">
-            <i class="fas fa-chart-bar"></i> إنشاء التقرير
-        </button>
-        <button class="btn btn-secondary" onclick="exportDetailedReport()">
-            <i class="fas fa-file-excel"></i> تصدير لإكسل
-        </button>
-        <button class="btn btn-outline" onclick="printDetailedReport()">
-            <i class="fas fa-print"></i> طباعة التقرير
-        </button>
-    </div>
-    
-    <div id="report-result"></div>
-</div>
-
-        <!-- تبويب الإحصائيات -->
-        <div id="stats-tab" class="tab-content">
-            <h2 style="color: var(--primary); margin-bottom: 25px;">
-                <i class="fas fa-chart-pie"></i> الإحصائيات العامة
-            </h2>
-            
-            <button class="btn" onclick="loadStatistics()">
-                <i class="fas fa-sync-alt"></i> تحديث الإحصائيات
-            </button>
-            
-            <div id="statistics-result">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل الإحصائيات...</p>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <!-- تبويب إدارة المدارس -->
-        <div id="schools-tab" class="tab-content">
-            <h2 style="color: var(--primary); margin-bottom: 25px;">
-                <i class="fas fa-school"></i> إدارة المدارس
-            </h2>
-            
-            <div class="grid-2">
-                <div class="card">
-                    <h3 style="color: var(--secondary); margin-bottom: 20px;">
-                        <i class="fas fa-plus-circle"></i> إضافة مدرسة جديدة
-                    </h3>
-                    
-                    <div class="form-group">
-                        <label for="newSchoolCode">كود المدرسة</label>
-                        <input type="text" id="newSchoolCode" placeholder="مثال: PRM003">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newSchoolName">اسم المدرسة</label>
-                        <input type="text" id="newSchoolName" placeholder="أدخل اسم المدرسة">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newSchoolStage">المرحلة التعليمية</label>
-                        <select id="newSchoolStage">
-                            <option value="رياض اطفال">رياض أطفال</option>
-                            <option value="ابتدائى">ابتدائي</option>
-                            <option value="اعدادى">إعدادي</option>
-                            <option value="ثانوى">ثانوي</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newSchoolSerial">الرقم المسلسل</label>
-                        <input type="text" id="newSchoolSerial" placeholder="أدخل الرقم المسلسل">
-                    </div>
-                    
-                    <button class="btn" onclick="addNewSchool()">
-                        <i class="fas fa-plus"></i> إضافة المدرسة
-                    </button>
-                </div>
-                
-                <div class="card">
-                    <h3 style="color: var(--secondary); margin-bottom: 20px;">
-                        <i class="fas fa-list"></i> قائمة المدارس
-                    </h3>
-                    <button class="btn btn-outline" onclick="loadSchoolsList()">
-                        <i class="fas fa-sync"></i> تحديث القائمة
-                    </button>
-                    <button class="btn btn-secondary" onclick="createSampleData()">
-                        <i class="fas fa-magic"></i> بيانات تجريبية
-                    </button>
-                    <button class="btn btn-warning" onclick="clearAllData()">
-                        <i class="fas fa-trash"></i> مسح البيانات
-                    </button>
-                    <div id="schools-list" style="margin-top: 20px;"></div>
-                </div>
-            </div>
+        <div style="margin-top:12px">
+          <label>اسم المدرسة</label>
+          <select id="school" onchange="resetVerification();">
+            <option value="">-- اختر المدرسة --</option>
+          </select>
         </div>
-    </div>
-    
+      </div>
 
-    <!-- نافذة التحميل -->
-    <div id="loading-overlay" style="display: none;">
-        <div class="loading">
-            <div class="spinner"></div>
-            <p id="loading-message">جاري التحميل...</p>
+      <div id="verification-section" class="summary-card" style="display:none">
+        <label>الرقم المسلسل للمدرسة</label>
+        <div style="display:flex;gap:8px">
+          <input id="schoolSerial" placeholder="أدخل الرقم المسلسل"/>
+          <button class="btn" onclick="verifySchoolSerial()">تحقق</button>
         </div>
+        <div id="verification-result" style="margin-top:8px"></div>
+      </div>
+
+      <div id="attendance-section" style="display:none">
+        <div class="summary-card">
+          <p id="verified-school-info" style="font-weight:bold"></p>
+        </div>
+
+        <table class="attendance-table">
+          <thead>
+            <tr><th>الصف الدراسي</th><th>عدد المقيدين</th><th>عدد الحاضرين</th><th>عدد الغائبين</th><th>نسبة الحضور</th></tr>
+          </thead>
+          <tbody id="attendance-body">
+            <!-- سيتم توليد الصفوف ديناميكياً -->
+          </tbody>
+        </table>
+
+        <div style="text-align:center;margin-top:12px">
+          <button class="btn" onclick="saveAttendance()"><i class="fas fa-save"></i> حفظ البيانات</button>
+          <button class="btn btn-outline" onclick="resetForm()"><i class="fas fa-redo"></i> بدء تسجيل جديد</button>
+        </div>
+      </div>
     </div>
 
-    <script>
-        // =============================================
-        // النظام الكامل - JavaScript (محدث للعمل على GitHub Pages)
-        // =============================================
+    <!-- تقارير -->
+    <div id="reports-tab" class="tab-content">
+      <h2>التقارير</h2>
+      <div class="grid-2">
+        <div>
+          <label>من تاريخ</label>
+          <input type="date" id="startDate"/>
+        </div>
+        <div>
+          <label>إلى تاريخ</label>
+          <input type="date" id="endDate"/>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>تصفية بالمدرسة</label>
+        <select id="reportSchool"><option value="">جميع المدارس</option></select>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn" onclick="generateDetailedReportUI()">إنشاء التقرير</button>
+        <button class="btn btn-outline" onclick="exportDetailedReportUI()">تصدير لإكسل</button>
+      </div>
+      <div id="report-result" style="margin-top:12px"></div>
+    </div>
 
-        // محاكاة localStorage لتخزين البيانات محلياً
-        const StorageManager = {
-            // تخزين البيانات
-            setItem: function(key, value) {
-                try {
-                    localStorage.setItem(key, JSON.stringify(value));
-                    return true;
-                } catch (e) {
-                    console.error('فشل في حفظ البيانات:', e);
-                    return false;
-                }
-            },
+    <!-- إحصائيات -->
+    <div id="stats-tab" class="tab-content">
+      <h2>الإحصائيات العامة</h2>
+      <div style="margin-top:8px">
+        <button class="btn" onclick="loadStatistics()">تحديث الإحصائيات</button>
+      </div>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="card summary-card">
+          <div>إجمالي المقيدين</div>
+          <div id="total-enrolled">0</div>
+        </div>
+        <div class="card summary-card">
+          <div>إجمالي الحاضرين</div>
+          <div id="total-present">0</div>
+        </div>
+      </div>
+      <div id="statistics-result" style="margin-top:12px"></div>
+    </div>
 
-            // جلب البيانات
-            getItem: function(key) {
-                try {
-                    const item = localStorage.getItem(key);
-                    return item ? JSON.parse(item) : null;
-                } catch (e) {
-                    console.error('فشل في جلب البيانات:', e);
-                    return null;
-                }
-            },
+    <!-- إدارة المدارس -->
+    <div id="schools-tab" class="tab-content">
+      <h2>إدارة المدارس</h2>
+      <div class="grid-2">
+        <div>
+          <label>كود المدرسة</label>
+          <input id="newSchoolCode" placeholder="مثال PRM003"/>
+          <label>اسم المدرسة</label>
+          <input id="newSchoolName" placeholder="أدخل اسم المدرسة"/>
+          <label>المرحلة</label>
+          <select id="newSchoolStage">
+            <option value="رياض اطفال">رياض أطفال</option>
+            <option value="ابتدائى">ابتدائي</option>
+            <option value="اعدادى">إعدادي</option>
+            <option value="ثانوى">ثانوي</option>
+          </select>
+          <label>الرقم المسلسل</label>
+          <input id="newSchoolSerial" placeholder="الرقم المسلسل"/>
+          <div style="margin-top:8px">
+            <button class="btn" onclick="addNewSchoolUI()">إضافة المدرسة</button>
+          </div>
+        </div>
+        <div>
+          <div style="margin-bottom:8px">
+            <button class="btn btn-outline" onclick="loadSchoolsList()">تحديث القائمة</button>
+            <button class="btn btn-outline" onclick="createSampleData()">بيانات تجريبية</button>
+            <button class="btn btn-outline" onclick="clearAllData()">مسح البيانات</button>
+          </div>
+          <div id="schools-list"></div>
+        </div>
+      </div>
+    </div>
 
-            // حذف البيانات
-            removeItem: function(key) {
-                try {
-                    localStorage.removeItem(key);
-                    return true;
-                } catch (e) {
-                    console.error('فشل في حذف البيانات:', e);
-                    return false;
-                }
-            },
+  </div>
 
-            // مسح جميع البيانات
-            clear: function() {
-                try {
-                    localStorage.clear();
-                    return true;
-                } catch (e) {
-                    console.error('فشل في مسح البيانات:', e);
-                    return false;
-                }
-            }
-        };
+  <div id="loading-overlay" style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(255,255,255,0.7);align-items:center;justify-content:center">
+    <div style="text-align:center;padding:20px">
+      <div style="width:48px;height:48px;border-radius:50%;border:6px solid #eee;border-top-color:#2E7D32;animation:spin 1s linear infinite;margin:0 auto"></div>
+      <p id="loading-message">جاري المعالجة...</p>
+    </div>
+  </div>
 
-        // قاعدة البيانات المحلية
-        const LocalDatabase = {
-            // تهيئة قاعدة البيانات
-            init: function() {
-                if (!StorageManager.getItem('attendance_system_initialized')) {
-                    // البيانات الأولية
-                    const initialData = {
-                        schools: [
-                            { id: 1, code: 'KGD001', name: 'روضة الأزهار', type: 'رياض اطفال', serial: '12345' },
-                            { id: 2, code: 'PRM001', name: 'مدرسة النهضة الابتدائية', type: 'ابتدائى', serial: '23456' },
-                            { id: 3, code: 'MID001', name: 'مدرسة الأمل الإعدادية', type: 'اعدادى', serial: '34567' },
-                            { id: 4, code: 'SEC001', name: 'مدرسة المستقبل الثانوية', type: 'ثانوى', serial: '45678' }
-                        ],
-                        attendance: [],
-                        statistics: {
-                            totalRecords: 0,
-                            totalStudents: 0,
-                            totalPresent: 0,
-                            averageAttendance: 0
-                        }
-                    };
-                    
-                    StorageManager.setItem('attendance_system_data', initialData);
-                    StorageManager.setItem('attendance_system_initialized', true);
-                }
-                return StorageManager.getItem('attendance_system_data');
-            },
+  <script>
+    // ================== إعداد الاتصال ==================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_9ydj6yIC6XlCa08Kj7Vpki76brLdtDSCZTaYlwvmQgk_WBlSIwqw1mILYvJ1sbS3/exec';
+    const API_KEY = ''; // أدخل المفتاح هنا إذا ضبطته في Code.gs
 
-            // حفظ البيانات
-            save: function(data) {
-                return StorageManager.setItem('attendance_system_data', data);
-            },
+    // وظائف مساعدة للعرض
+    function showLoading(msg) {
+      const o = document.getElementById('loading-overlay');
+      if (o) { document.getElementById('loading-message').textContent = msg || 'جاري المعالجة...'; o.style.display = 'flex'; }
+    }
+    function hideLoading(){ const o=document.getElementById('loading-overlay'); if(o) o.style.display='none'; }
+    function showAlert(msg,type){ alert(msg); } // يمكنك استبدالها بمودال أجمل في مشروعك
 
-            // جلب البيانات
-            get: function() {
-                return StorageManager.getItem('attendance_system_data') || this.init();
-            },
+    // تبويبات
+    function showTab(name){
+      document.querySelectorAll('.tab').forEach(btn=>btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(div=>div.classList.remove('active'));
+      document.querySelector(`.tab[onclick="showTab('${name}')"]`)?.classList.add('active');
+      document.getElementById(name + '-tab')?.classList.add('active');
+    }
 
-            // توليد ID جديد
-            generateId: function() {
-                const data = this.get();
-                const allIds = [
-                    ...data.schools.map(s => s.id),
-                    ...data.attendance.map(a => a.id || 0)
-                ];
-                return allIds.length > 0 ? Math.max(...allIds) + 1 : 1;
-            }
-        };
+    // تهيئة الواجهة عند التحميل
+    document.addEventListener('DOMContentLoaded', function(){
+      setCurrentDate();
+      loadAllSchools();
+      setDefaultDates();
+    });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSystem();
+    function setCurrentDate(){ document.getElementById('date').value = new Date().toISOString().split('T')[0]; }
+    function setDefaultDates(){
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').value = today;
+      document.getElementById('endDate').value = today;
+    }
+
+    // ========== استدعاءات الشبكة ==========
+    async function postAction(action, payload = {}) {
+      const body = Object.assign({}, payload, { action: action });
+      if (API_KEY) body.apiKey = API_KEY;
+      showLoading('جاري الاتصال بالخادم...');
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
         });
+        const json = await res.json();
+        return json;
+      } catch (err) {
+        console.error('postAction error', err);
+        return { success: false, message: err.message || err.toString() };
+      } finally {
+        hideLoading();
+      }
+    }
 
-        function initializeSystem() {
-            // تهيئة قاعدة البيانات
-            LocalDatabase.init();
-            
-            setCurrentDate();
-            loadAllSchools();
-            setDefaultDates();
-            showWelcomeMessage();
-            
-            // إضافة تأثيرات الظهور
-            document.querySelectorAll('.stat-card, .card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            });
-        }
+    // تحقق من الاتصال
+    async function verifyConnection(){
+      const r = await postAction('ping', {});
+      if (r && r.success) showAlert('✅ ' + r.message, 'success');
+      else showAlert('❌ ' + (r.message || JSON.stringify(r)), 'error');
+    }
 
-        function showWelcomeMessage() {
-            const now = new Date();
-            const hour = now.getHours();
-            let greeting = 'مرحباً';
-            
-            if (hour < 12) greeting = 'صباح الخير';
-            else if (hour < 18) greeting = 'مساء الخير';
-            else greeting = 'مساء الخير';
-            
-            showAlert(` ${greeting}! تم تحميل النظام بنجاح.`, 'success');
-            
-            // عرض معلومات التخزين
-            const data = LocalDatabase.get();
-            const totalRecords = data.attendance.length;
-            if (totalRecords > 0) {
-                showAlert(`💾 يوجد ${totalRecords} سجل محفوظ محلياً`, 'info');
-            }
-        }
-
-        function setCurrentDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-        }
-
-        function loadAllSchools() {
-            showLoading('جاري تحميل المدارس...');
-            
-            setTimeout(() => {
-                hideLoading();
-                const data = LocalDatabase.get();
-                const reportSchoolSelect = document.getElementById('reportSchool');
-                reportSchoolSelect.innerHTML = '<option value="">جميع المدارس</option>';
-                
-                data.schools.forEach(school => {
-                    const option = document.createElement('option');
-                    option.value = school.id;
-                    option.textContent = `${school.code} - ${school.name}`;
-                    reportSchoolSelect.appendChild(option);
-                });
-            }, 500);
-        }
-
-        function loadSchoolsByStage() {
-            const stage = document.getElementById('educationStage').value;
-            if (!stage) {
-                document.getElementById('school').innerHTML = '<option value="">-- اختر المدرسة --</option>';
-                document.getElementById('verification-section').style.display = 'none';
-                document.getElementById('attendance-section').style.display = 'none';
-                return;
-            }
-
-            showLoading('جاري تحميل المدارس...');
-            
-            setTimeout(() => {
-                hideLoading();
-                const data = LocalDatabase.get();
-                const schoolSelect = document.getElementById('school');
-                schoolSelect.innerHTML = '<option value="">-- اختر المدرسة --</option>';
-                
-                const filteredSchools = data.schools.filter(school => school.type === stage);
-                
-                filteredSchools.forEach(school => {
-                    const option = document.createElement('option');
-                    option.value = school.id;
-                    option.textContent = `${school.code} - ${school.name}`;
-                    option.setAttribute('data-serial', school.serial);
-                    schoolSelect.appendChild(option);
-                });
-                
-                document.getElementById('verification-section').style.display = 'block';
-                document.getElementById('attendance-section').style.display = 'none';
-            }, 500);
-        }
-
-        function resetVerification() {
-            const schoolId = document.getElementById('school').value;
-            if (!schoolId) {
-                document.getElementById('verification-section').style.display = 'none';
-            } else {
-                document.getElementById('schoolSerial').value = '';
-                document.getElementById('verification-result').innerHTML = '';
-                document.getElementById('attendance-section').style.display = 'none';
-            }
-        }
-
-        function verifySchoolSerial() {
-            const schoolId = document.getElementById('school').value;
-            const serialNumber = document.getElementById('schoolSerial').value.trim();
-            
-            if (!schoolId) {
-                showAlert('⚠️ يرجى اختيار المدرسة أولاً', 'error');
-                return;
-            }
-            
-            if (!serialNumber) {
-                showAlert('⚠️ يرجى إدخال الرقم المسلسل', 'error');
-                return;
-            }
-
-            showLoading('جاري التحقق...');
-            
-            setTimeout(() => {
-                hideLoading();
-                const selectedOption = document.querySelector('#school option:checked');
-                const correctSerial = selectedOption.getAttribute('data-serial');
-                
-                if (serialNumber === correctSerial) {
-                    document.getElementById('verification-result').innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> ✅ الرقم المسلسل صحيح
-                        </div>
-                    `;
-                    document.getElementById('attendance-section').style.display = 'block';
-                    document.getElementById('verified-school-info').textContent = 
-                        `المدرسة: ${selectedOption.textContent}`;
-                    createAttendanceTable();
-                } else {
-                    document.getElementById('verification-result').innerHTML = `
-                        <div class="alert alert-error">
-                            <i class="fas fa-times-circle"></i> ❌ الرقم المسلسل غير صحيح
-                        </div>
-                    `;
-                    document.getElementById('attendance-section').style.display = 'none';
-                }
-            }, 1000);
-        }
-
-        function createAttendanceTable() {
-            const stage = document.getElementById('educationStage').value;
-            let grades = [];
-            
-            if (stage === 'ابتدائى') {
-                grades = ['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'];
-            } else if (stage === 'اعدادى') {
-                grades = ['الصف الأول الإعدادي', 'الصف الثاني الإعدادي', 'الصف الثالث الإعدادي'];
-            } else if (stage === 'ثانوى') {
-                grades = ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
-            } else {
-                grades = ['التمهيدي', 'الروضة الأولى', 'الروضة الثانية'];
-            }
-            
-            const tbody = document.getElementById('attendance-body');
-            tbody.innerHTML = '';
-
-            grades.forEach(grade => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td style="font-weight: bold; color: var(--secondary);">${grade}</td>
-                    <td>
-                        <input type="number" class="enrolled attendance-input" 
-                               data-grade="${grade}" min="0" value="0"
-                               onfocus="this.select()">
-                    </td>
-                    <td>
-                        <input type="number" class="present attendance-input" 
-                               data-grade="${grade}" min="0" value="0"
-                               onfocus="this.select()">
-                    </td>
-                    <td>
-                        <span class="absent" data-grade="${grade}" 
-                              style="font-weight: bold; color: var(--warning);">0</span>
-                    </td>
-                    <td>
-                        <span class="rate" data-grade="${grade}" 
-                              style="font-weight: bold;">0%</span>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            document.querySelectorAll('.present, .enrolled').forEach(input => {
-                input.addEventListener('input', calculateGradeStats);
-            });
-            
-            updateTotalSummary();
-        }
-
-        function calculateGradeStats() {
-            const grade = this.getAttribute('data-grade');
-            const enrolledInput = document.querySelector(`.enrolled[data-grade="${grade}"]`);
-            const presentInput = document.querySelector(`.present[data-grade="${grade}"]`);
-            
-            const enrolled = parseInt(enrolledInput.value) || 0;
-            const present = parseInt(presentInput.value) || 0;
-            const absent = Math.max(0, enrolled - present);
-            const rate = enrolled > 0 ? Math.round((present / enrolled) * 100) : 0;
-            
-            document.querySelector(`.absent[data-grade="${grade}"]`).textContent = absent;
-            document.querySelector(`.rate[data-grade="${grade}"]`).textContent = rate + '%';
-            
-            const rateElement = document.querySelector(`.rate[data-grade="${grade}"]`);
-            if (rate >= 90) {
-                rateElement.style.color = '#2E7D32';
-            } else if (rate >= 75) {
-                rateElement.style.color = '#FF9800';
-            } else {
-                rateElement.style.color = '#F44336';
-            }
-            
-            if (present > enrolled) {
-                presentInput.value = enrolled;
-                showAlert(`⚠️ عدد الحاضرين لا يمكن أن يزيد عن عدد المقيدين في ${grade}`, 'error');
-            }
-            
-            updateTotalSummary();
-        }
-
-        function updateTotalSummary() {
-            let totalEnrolled = 0;
-            let totalPresent = 0;
-
-            document.querySelectorAll('.enrolled').forEach(input => {
-                totalEnrolled += parseInt(input.value) || 0;
-            });
-
-            document.querySelectorAll('.present').forEach(input => {
-                totalPresent += parseInt(input.value) || 0;
-            });
-
-            const totalAbsent = Math.max(0, totalEnrolled - totalPresent);
-            const totalRate = totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 100) : 0;
-
-            document.getElementById('total-enrolled').textContent = totalEnrolled.toLocaleString();
-            document.getElementById('total-present').textContent = totalPresent.toLocaleString();
-            document.getElementById('total-absent').textContent = totalAbsent.toLocaleString();
-            document.getElementById('attendance-rate').textContent = totalRate + '%';
-            
-            const rateElement = document.getElementById('attendance-rate');
-            if (totalRate >= 90) {
-                rateElement.style.color = '#2E7D32';
-            } else if (totalRate >= 75) {
-                rateElement.style.color = '#FF9800';
-            } else {
-                rateElement.style.color = '#F44336';
-            }
-        }
-
-        function saveAttendance() {
-            const date = document.getElementById('date').value;
-            const schoolId = document.getElementById('school').value;
-            const schoolSerial = document.getElementById('schoolSerial').value.trim();
-            
-            if (!date || !schoolId || !schoolSerial) {
-                showAlert('⚠️ يرجى التحقق من جميع البيانات', 'error');
-                return;
-            }
-            
-            const attendance_data = [];
-            let hasData = false;
-            
-            document.querySelectorAll('#attendance-body tr').forEach(row => {
-                const gradeInput = row.querySelector('.enrolled');
-                if(gradeInput) {
-                    const grade = gradeInput.getAttribute('data-grade');
-                    const enrolled = parseInt(gradeInput.value) || 0;
-                    const present = parseInt(row.querySelector('.present').value) || 0;
-                    
-                    if (enrolled > 0) {
-                        attendance_data.push({
-                            grade: grade,
-                            enrolled: enrolled,
-                            present: present
-                        });
-                        hasData = true;
-                    }
-                }
-            });
-
-            if (!hasData) {
-                showAlert('⚠️ يرجى إدخال بيانات للحضور', 'error');
-                return;
-            }
-
-            showLoading('جاري حفظ البيانات...');
-            
-            setTimeout(() => {
-                // حفظ البيانات في التخزين المحلي
-                const data = LocalDatabase.get();
-                const newRecord = {
-                    id: LocalDatabase.generateId(),
-                    timestamp: new Date().toISOString(),
-                    date: date,
-                    schoolId: parseInt(schoolId),
-                    schoolSerial: schoolSerial,
-                    attendance: attendance_data
-                };
-                
-                data.attendance.push(newRecord);
-                LocalDatabase.save(data);
-                
-                hideLoading();
-                showAlert('✅ تم حفظ البيانات بنجاح في التخزين المحلي', 'success');
-                resetForm();
-            }, 1500);
-        }
-
-        function resetForm() {
-            document.getElementById('educationStage').value = '';
-            document.getElementById('school').innerHTML = '<option value="">-- اختر المدرسة --</option>';
-            document.getElementById('schoolSerial').value = '';
-            document.getElementById('verification-result').innerHTML = '';
-            document.getElementById('verification-section').style.display = 'none';
-            document.getElementById('attendance-section').style.display = 'none';
-            document.getElementById('attendance-body').innerHTML = '';
-            
-            updateTotalSummary();
-        }
-
-        function setDefaultDates() {
-            const today = new Date();
-            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('endDate').value = today.toISOString().split('T')[0];
-        }
-
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.currentTarget.classList.add('active');
-
-            // تحميل البيانات حسب التبويب
-            setTimeout(() => {
-                document.querySelectorAll('.stat-card, .card').forEach(card => {
-                    const rect = card.getBoundingClientRect();
-                    if (rect.top < window.innerHeight - 100) {
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }
-                });
-            }, 100);
-        }
-
-        // دوال التحكم في البيانات
-        function verifyConnection() {
-            showLoading('جاري التحقق من الاتصال...');
-            setTimeout(() => {
-                hideLoading();
-                showAlert('✅ النظام يعمل بنجاح على GitHub Pages', 'success');
-            }, 1000);
-        }
-
-        function createSampleData() {
-            if (!confirm('⚠️ هل تريد إنشاء بيانات تجريبية؟ سيتم مسح أي بيانات موجودة.')) {
-                return;
-            }
-            
-            showLoading('جاري إنشاء البيانات التجريبية...');
-            
-            setTimeout(() => {
-                const sampleData = {
-                    schools: [
-                        { id: 1, code: 'KGD001', name: 'روضة الأزهار', type: 'رياض اطفال', serial: '12345' },
-                        { id: 2, code: 'PRM001', name: 'مدرسة النهضة الابتدائية', type: 'ابتدائى', serial: '23456' },
-                        { id: 3, code: 'MID001', name: 'مدرسة الأمل الإعدادية', type: 'اعدادى', serial: '34567' },
-                        { id: 4, code: 'SEC001', name: 'مدرسة المستقبل الثانوية', type: 'ثانوى', serial: '45678' },
-                        { id: 5, code: 'PRM002', name: 'مدرسة الفلاح الابتدائية', type: 'ابتدائى', serial: '56789' }
-                    ],
-                    attendance: [
-                        {
-                            id: 1,
-                            timestamp: new Date().toISOString(),
-                            date: new Date().toISOString().split('T')[0],
-                            schoolId: 2,
-                            schoolSerial: '23456',
-                            attendance: [
-                                { grade: 'الصف الأول', enrolled: 30, present: 28 },
-                                { grade: 'الصف الثاني', enrolled: 32, present: 30 },
-                                { grade: 'الصف الثالث', enrolled: 28, present: 25 }
-                            ]
-                        }
-                    ],
-                    statistics: {
-                        totalRecords: 1,
-                        totalStudents: 90,
-                        totalPresent: 83,
-                        averageAttendance: 92.2
-                    }
-                };
-                
-                LocalDatabase.save(sampleData);
-                hideLoading();
-                showAlert('✅ تم إنشاء البيانات التجريبية بنجاح', 'success');
-                loadAllSchools();
-                loadSchoolsList();
-            }, 2000);
-        }
-
-        function addNewSchool() {
-            const code = document.getElementById('newSchoolCode').value.trim();
-            const name = document.getElementById('newSchoolName').value.trim();
-            const stage = document.getElementById('newSchoolStage').value;
-            const serial = document.getElementById('newSchoolSerial').value.trim();
-            
-            if (!code || !name || !serial) {
-                showAlert('⚠️ يرجى ملء جميع الحقول المطلوبة', 'error');
-                return;
-            }
-            
-            showLoading('جاري إضافة المدرسة...');
-            
-            setTimeout(() => {
-                const data = LocalDatabase.get();
-                const newSchool = {
-                    id: LocalDatabase.generateId(),
-                    code: code,
-                    name: name,
-                    type: stage,
-                    serial: serial
-                };
-                
-                data.schools.push(newSchool);
-                LocalDatabase.save(data);
-                
-                hideLoading();
-                showAlert('✅ تم إضافة المدرسة بنجاح', 'success');
-                document.getElementById('newSchoolCode').value = '';
-                document.getElementById('newSchoolName').value = '';
-                document.getElementById('newSchoolSerial').value = '';
-                loadSchoolsList();
-            }, 1000);
-        }
-
-        function loadSchoolsList() {
-            const listDiv = document.getElementById('schools-list');
-            listDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>جاري تحميل البيانات...</p></div>';
-            
-            setTimeout(() => {
-                const data = LocalDatabase.get();
-                let html = '<div class="grid-2">';
-                data.schools.forEach(school => {
-                    html += `
-                        <div class="card" style="text-align: center;">
-                            <h4>${school.name}</h4>
-                            <div class="school-badge badge-primary">${school.code}</div>
-                            <div class="school-badge badge-secondary">${school.type}</div>
-                            <div style="margin-top: 10px; color: var(--text-light); font-size: 0.9em;">
-                                <i class="fas fa-key"></i> الرقم المسلسل: ${school.serial}
-                            </div>
-                            <button class="btn btn-outline btn-small" onclick="deleteSchool(${school.id})" style="margin-top: 10px;">
-                                <i class="fas fa-trash"></i> حذف
-                            </button>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                listDiv.innerHTML = html;
-            }, 500);
-        }
-
-        function deleteSchool(schoolId) {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذه المدرسة؟')) {
-                return;
-            }
-            
-            const data = LocalDatabase.get();
-            data.schools = data.schools.filter(school => school.id !== schoolId);
-            LocalDatabase.save(data);
-            
-            showAlert('✅ تم حذف المدرسة بنجاح', 'success');
-            loadSchoolsList();
-        }
-
-        // دوال التقارير
-        function generateDetailedReport() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-
-            if (!startDate || !endDate) {
-                showAlert('⚠️ يرجى تحديد الفترة الزمنية', 'error');
-                return;
-            }
-
-            showLoading('جاري إنشاء التقرير...');
-            
-            setTimeout(() => {
-                hideLoading();
-                const data = LocalDatabase.get();
-                const filteredRecords = data.attendance.filter(record => {
-                    return record.date >= startDate && record.date <= endDate;
-                });
-                
-                let totalStudents = 0;
-                let totalPresent = 0;
-                
-                filteredRecords.forEach(record => {
-                    record.attendance.forEach(att => {
-                        totalStudents += att.enrolled;
-                        totalPresent += att.present;
-                    });
-                });
-                
-                const averageRate = totalStudents > 0 ? ((totalPresent / totalStudents) * 100).toFixed(2) : 0;
-                
-                const resultDiv = document.getElementById('report-result');
-                resultDiv.innerHTML = `
-                    <div class="summary-card">
-                        <h3><i class="fas fa-chart-bar"></i> تقرير الحضور والغياب</h3>
-                        <p><strong>الفترة:</strong> ${startDate} إلى ${endDate}</p>
-                        <p><strong>عدد السجلات:</strong> ${filteredRecords.length} سجل</p>
-                        <p><strong>إجمالي الطلاب:</strong> ${totalStudents}</p>
-                        <p><strong>إجمالي الحضور:</strong> ${totalPresent}</p>
-                        <p><strong>متوسط الحضور:</strong> ${averageRate}%</p>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="attendance-table">
-                            <thead>
-                                <tr>
-                                    <th>التاريخ</th>
-                                    <th>المدرسة</th>
-                                    <th>الصف</th>
-                                    <th>المقيدين</th>
-                                    <th>الحاضرين</th>
-                                    <th>الغائبين</th>
-                                    <th>النسبة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${filteredRecords.map(record => {
-                                    const school = data.schools.find(s => s.id === record.schoolId);
-                                    return record.attendance.map(att => `
-                                        <tr>
-                                            <td>${record.date}</td>
-                                            <td>${school ? school.name : 'غير معروف'}</td>
-                                            <td>${att.grade}</td>
-                                            <td>${att.enrolled}</td>
-                                            <td>${att.present}</td>
-                                            <td>${att.enrolled - att.present}</td>
-                                            <td>${((att.present / att.enrolled) * 100).toFixed(2)}%</td>
-                                        </tr>
-                                    `).join('');
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                
-                showAlert('✅ تم إنشاء التقرير بنجاح', 'success');
-            }, 1500);
-        }
-
-        function exportDetailedReport() {
-            const data = LocalDatabase.get();
-            const csvContent = convertToCSV(data);
-            downloadCSV(csvContent, 'تقرير_الحضور.csv');
-            showAlert('✅ تم تصدير البيانات بنجاح', 'success');
-        }
-
-        function convertToCSV(data) {
-            const headers = ['التاريخ', 'المدرسة', 'الصف', 'المقيدين', 'الحاضرين', 'الغائبين', 'النسبة'];
-            let csv = headers.join(',') + '\n';
-            
-            data.attendance.forEach(record => {
-                const school = data.schools.find(s => s.id === record.schoolId);
-                record.attendance.forEach(att => {
-                    const row = [
-                        record.date,
-                        school ? school.name : 'غير معروف',
-                        att.grade,
-                        att.enrolled,
-                        att.present,
-                        att.enrolled - att.present,
-                        ((att.present / att.enrolled) * 100).toFixed(2) + '%'
-                    ];
-                    csv += row.join(',') + '\n';
-                });
-            });
-            
-            return csv;
-        }
-
-        function downloadCSV(csvContent, fileName) {
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', fileName);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function printDetailedReport() {
-            window.print();
-        }
-
-        function loadStatistics() {
-            showLoading('جاري تحميل الإحصائيات...');
-            
-            setTimeout(() => {
-                hideLoading();
-                const data = LocalDatabase.get();
-                const totalRecords = data.attendance.length;
-                
-                let totalStudents = 0;
-                let totalPresent = 0;
-                
-                data.attendance.forEach(record => {
-                    record.attendance.forEach(att => {
-                        totalStudents += att.enrolled;
-                        totalPresent += att.present;
-                    });
-                });
-                
-                const averageAttendance = totalStudents > 0 ? ((totalPresent / totalStudents) * 100).toFixed(2) : 0;
-                
-                const resultDiv = document.getElementById('statistics-result');
-                resultDiv.innerHTML = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <i class="fas fa-database fa-2x" style="color: var(--primary);"></i>
-                            <div class="stat-label">إجمالي السجلات</div>
-                            <div class="stat-number">${totalRecords}</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-users fa-2x" style="color: var(--secondary);"></i>
-                            <div class="stat-label">إجمالي الطلاب</div>
-                            <div class="stat-number">${totalStudents.toLocaleString()}</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-user-check fa-2x" style="color: var(--primary);"></i>
-                            <div class="stat-label">إجمالي الحضور</div>
-                            <div class="stat-number">${totalPresent.toLocaleString()}</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-chart-line fa-2x" style="color: var(--accent);"></i>
-                            <div class="stat-label">متوسط الحضور</div>
-                            <div class="stat-number">${averageAttendance}%</div>
-                        </div>
-                    </div>
-                    <div class="alert alert-success" style="margin-top: 20px;">
-                        <i class="fas fa-info-circle"></i>
-                        تم تحميل الإحصائيات من البيانات المحفوظة في التخزين المحلي.
-                    </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button class="btn btn-warning" onclick="clearAllData()">
-                            <i class="fas fa-trash"></i> مسح جميع البيانات
-                        </button>
-                        <button class="btn btn-secondary" onclick="exportAllData()">
-                            <i class="fas fa-download"></i> نسخ احتياطي للبيانات
-                        </button>
-                    </div>
-                `;
-            }, 1000);
-        }
-
-        function clearAllData() {
-            if (!confirm('⚠️ هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء!')) {
-                return;
-            }
-            
-            LocalDatabase.clear();
-            showAlert('✅ تم مسح جميع البيانات بنجاح', 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        }
-
-        function exportAllData() {
-            const data = LocalDatabase.get();
-            const dataStr = JSON.stringify(data, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'attendance_system_backup.json';
-            link.click();
-            showAlert('✅ تم إنشاء نسخة احتياطية بنجاح', 'success');
-        }
-
-        // دوال المساعدة
-        function showAlert(message, type) {
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `<i class="fas fa-${getAlertIcon(type)}"></i> ${message}`;
-            
-            const activeTab = document.querySelector('.tab-content.active');
-            if (activeTab) {
-                activeTab.insertBefore(alert, activeTab.firstChild);
-            }
-            
-            setTimeout(() => {
-                if (alert.parentElement) {
-                    alert.parentElement.removeChild(alert);
-                }
-            }, 5000);
-        }
-
-        function getAlertIcon(type) {
-            const icons = {
-                'success': 'check-circle',
-                'error': 'times-circle',
-                'warning': 'exclamation-triangle',
-                'info': 'info-circle'
-            };
-            return icons[type] || 'info-circle';
-        }
-
-        function showLoading(message = 'جاري التحميل...') {
-            const overlay = document.getElementById('loading-overlay');
-            const messageElement = document.getElementById('loading-message');
-            
-            messageElement.textContent = message;
-            overlay.style.display = 'flex';
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.background = 'rgba(0,0,0,0.8)';
-            overlay.style.justifyContent = 'center';
-            overlay.style.alignItems = 'center';
-            overlay.style.zIndex = '9999';
-            overlay.style.color = 'white';
-            overlay.style.fontSize = '1.1em';
-        }
-
-        function hideLoading() {
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'none';
-        }
-
-        // تأثيرات التمرير
-        window.addEventListener('scroll', function() {
-            const cards = document.querySelectorAll('.stat-card, .card');
-            cards.forEach(card => {
-                const rect = card.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 100) {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }
-            });
+    // تحميل جميع المدارس (لتصفية التقارير)
+    async function loadAllSchools(){
+      const r = await postAction('getAllSchools', {});
+      if (r && r.success) {
+        const schools = r.data || [];
+        const reportSelect = document.getElementById('reportSchool');
+        const schoolSelect = document.getElementById('school');
+        reportSelect.innerHTML = '<option value="">جميع المدارس</option>';
+        schoolSelect.innerHTML = '<option value="">-- اختر المدرسة --</option>';
+        schools.forEach(s=>{
+          const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.code + ' - ' + s.name;
+          reportSelect.appendChild(opt);
+          const opt2 = opt.cloneNode(true);
+          opt2.setAttribute('data-serial', s.serial || '');
+          schoolSelect.appendChild(opt2);
         });
+      } else {
+        console.warn('loadAllSchools failed', r);
+      }
+    }
 
-        // تهيئة تأثيرات الظهور عند التحميل
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                document.querySelectorAll('.stat-card, .card').forEach(card => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                });
-            }, 500);
+    // تحميل المدارس حسب المرحلة للواجهة
+    async function loadSchoolsByStage(){
+      const stage = document.getElementById('educationStage').value;
+      if (!stage) {
+        document.getElementById('school').innerHTML = '<option value="">-- اختر المدرسة --</option>';
+        document.getElementById('verification-section').style.display = 'none';
+        document.getElementById('attendance-section').style.display = 'none';
+        return;
+      }
+      const r = await postAction('getSchoolsByStage', { stage: stage });
+      if (r && r.success) {
+        const schoolSelect = document.getElementById('school');
+        schoolSelect.innerHTML = '<option value="">-- اختر المدرسة --</option>';
+        (r.data || []).forEach(s=>{
+          const option = document.createElement('option');
+          option.value = s.id;
+          option.textContent = s.code + ' - ' + s.name;
+          option.setAttribute('data-serial', s.serial || '');
+          schoolSelect.appendChild(option);
         });
+        document.getElementById('verification-section').style.display = 'block';
+        document.getElementById('attendance-section').style.display = 'none';
+      } else {
+        showAlert('فشل في جلب المدارس: ' + (r.message || ''),'error');
+      }
+    }
 
-        // اكتشاف حالة الاتصال بالإنترنت
-        window.addEventListener('online', function() {
-            showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
-        });
+    function resetVerification(){
+      document.getElementById('verification-result').innerHTML = '';
+      document.getElementById('attendance-section').style.display = 'none';
+      document.getElementById('verification-section').style.display = document.getElementById('educationStage').value ? 'block' : 'none';
+    }
 
-        window.addEventListener('offline', function() {
-            showAlert('⚠️ فقد الاتصال بالإنترنت', 'warning');
-        });
+    // التحقق من الرقم المسلسل
+    async function verifySchoolSerial(){
+      const schoolId = document.getElementById('school').value;
+      const serial = document.getElementById('schoolSerial').value;
+      if (!schoolId) { showAlert('اختر المدرسة أولاً','error'); return; }
+      if (!serial) { showAlert('أدخل الرقم المسلسل','error'); return; }
+      const r = await postAction('verifySchoolSerial', { schoolId: schoolId, serialNumber: serial });
+      const el = document.getElementById('verification-result');
+      if (r && r.verified) {
+        el.innerHTML = '<div style="color:green">'+ r.message +'</div>';
+        document.getElementById('attendance-section').style.display = 'block';
+        document.getElementById('verified-school-info').textContent = r.schoolName + ' ('+ schoolId +')';
+        populateAttendanceTableWithDefaults();
+      } else {
+        el.innerHTML = '<div style="color:red">'+ (r.message || 'فشل التحقق') +'</div>';
+      }
+    }
 
-        // منع إغلاق الصفحة إذا كان هناك بيانات غير محفوظة
-        window.addEventListener('beforeunload', function(e) {
-            const data = LocalDatabase.get();
-            if (data.attendance.length > 0) {
-                e.preventDefault();
-                e.returnValue = 'لديك بيانات غير محفوظة. هل أنت متأكد من المغادرة؟';
-            }
-        });
-    </script>
+    // ملء جدول حضور افتراضي (يمكن تخصيصه لاحقاً)
+    function populateAttendanceTableWithDefaults(){
+      const tbody = document.getElementById('attendance-body');
+      tbody.innerHTML = '';
+      // أمثلة صفوف — عدل أو اربط بنموذج حقيقي لديكم
+      const defaultGrades = ['KG','1','2','3','4','5','6'];
+      defaultGrades.forEach(g=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="grade">${g}</td>
+          <td><input class="enrolled" type="number" min="0" value="0" style="width:100px"></td>
+          <td><input class="present" type="number" min="0" value="0" style="width:100px"></td>
+          <td class="absent">0</td>
+          <td class="rate">0%</td>
+        `;
+        // حدث الحساب عند تغيير الأرقام
+        tr.querySelector('.enrolled').addEventListener('input', updateRowCalculations);
+        tr.querySelector('.present').addEventListener('input', updateRowCalculations);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateRowCalculations(e){
+      const tr = e.target.closest('tr');
+      const enrolled = Number(tr.querySelector('.enrolled').value) || 0;
+      let present = Number(tr.querySelector('.present').value) || 0;
+      if (present > enrolled) present = enrolled;
+      tr.querySelector('.present').value = present;
+      const absent = enrolled - present;
+      const rate = enrolled > 0 ? ((present / enrolled) * 100).toFixed(2) + '%' : '0%';
+      tr.querySelector('.absent').textContent = absent;
+      tr.querySelector('.rate').textContent = rate;
+    }
+
+    // تجهيز صفوف للإرسال
+    function prepareAttendanceRowsFromDOM(){
+      const tbody = document.getElementById('attendance-body');
+      const rows = [];
+      tbody.querySelectorAll('tr').forEach(tr=>{
+        const grade = tr.querySelector('.grade') ? tr.querySelector('.grade').textContent.trim() : '';
+        const enrolled = Number(tr.querySelector('.enrolled') ? tr.querySelector('.enrolled').value : 0) || 0;
+        const present = Number(tr.querySelector('.present') ? tr.querySelector('.present').value : 0) || 0;
+        rows.push({ grade: grade, enrolled: enrolled, present: present });
+      });
+      return rows;
+    }
+
+    // حفظ الحضور إلى Google Sheets عبر Apps Script
+    async function saveAttendance(){
+      const rows = prepareAttendanceRowsFromDOM();
+      if (!rows || rows.length === 0) { showAlert('لا توجد بيانات للحفظ','error'); return; }
+      const date = document.getElementById('date').value;
+      const schoolId = document.getElementById('school').value;
+      const payload = { date: date, school_id: schoolId, attendance_data: rows };
+      const r = await postAction('saveAttendance', payload);
+      if (r && r.success) {
+        showAlert('✅ ' + r.message + ' (تم إضافة ' + (r.appended || 0) + ' سطر)', 'success');
+        loadStatistics();
+      } else {
+        showAlert('فشل الحفظ: ' + (r.message || ''),'error');
+      }
+    }
+
+    // تحميل الإحصائيات وعرضها
+    async function loadStatistics(){
+      const r = await postAction('getStatistics', {});
+      if (r) {
+        document.getElementById('total-enrolled').textContent = r.totalStudents || 0;
+        document.getElementById('total-present').textContent = r.totalPresent || 0;
+        const st = document.getElementById('statistics-result');
+        st.innerHTML = '<pre style="white-space:pre-wrap">'+ JSON.stringify(r, null, 2) + '</pre>';
+      }
+    }
+
+    // إنشاء بيانات تجريبية
+    async function createSampleData(){
+      const r = await postAction('createSampleData', {});
+      if (r && r.success) { showAlert(r.message,'success'); loadAllSchools(); }
+      else showAlert('فشل إنشاء البيانات: ' + (r.message || ''),'error');
+    }
+
+    // حذف البيانات
+    async function clearAllData(){
+      if (!confirm('هل أنت متأكد من مسح بيانات الحضور والملخّص؟')) return;
+      const r = await postAction('clearAllData', {});
+      if (r && r.success) { showAlert(r.message,'success'); loadStatistics(); }
+      else showAlert('فشل المسح: ' + (r.message || ''),'error');
+    }
+
+    // إضافة مدرسة من الواجهة
+    async function addNewSchoolUI(){
+      const code = document.getElementById('newSchoolCode').value.trim();
+      const name = document.getElementById('newSchoolName').value.trim();
+      const stage = document.getElementById('newSchoolStage').value;
+      const serial = document.getElementById('newSchoolSerial').value.trim();
+      if (!code || !name) { showAlert('أدخل كود واسم المدرسة','error'); return; }
+      const r = await postAction('addNewSchool', { schoolData: { code: code, name: name, stage: stage, serial: serial } });
+      if (r && r.success) { showAlert(r.message,'success'); loadAllSchools(); loadSchoolsList(); }
+      else showAlert('فشل الإضافة: ' + (r.message || ''),'error');
+    }
+
+    // تحميل قائمة المدارس في صفحة الإدارة
+    async function loadSchoolsList(){
+      const r = await postAction('getAllSchools', {});
+      const container = document.getElementById('schools-list');
+      if (r && r.success) {
+        const list = r.data || [];
+        container.innerHTML = '<ul>' + list.map(s=>`<li>${s.id} - ${s.code} - ${s.name} - ${s.type}</li>`).join('') + '</ul>';
+      } else {
+        container.innerHTML = 'لا توجد مدارس';
+      }
+    }
+
+    // توليد تقرير مفصل من الواجهة
+    async function generateDetailedReportUI(){
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const schoolId = document.getElementById('reportSchool').value;
+      const r = await postAction('generateDetailedReport', { startDate: startDate, endDate: endDate, schoolId: schoolId });
+      const rr = document.getElementById('report-result');
+      if (r && r.success) {
+        rr.innerHTML = '<pre style="white-space:pre-wrap">'+ JSON.stringify(r.data, null, 2) +'</pre>';
+      } else {
+        rr.innerHTML = 'لا توجد بيانات أو حدث خطأ: ' + (r.message || '');
+      }
+    }
+
+    async function exportDetailedReportUI(){
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const schoolId = document.getElementById('reportSchool').value;
+      const r = await postAction('exportDetailedReport', { startDate: startDate, endDate: endDate, schoolId: schoolId });
+      if (r && r.success) {
+        window.open(r.url, '_blank');
+      } else {
+        showAlert('خطأ في التصدير: ' + (r.message || ''),'error');
+      }
+    }
+
+    // فحص وإصلاح البيانات (يتصل بدالة checkAndFixData في الخادم إن رغبت بإنشائها)
+    async function checkAndFixData(){
+      // حالياً سنكتفي بإعادة تحميل المدارس والتحقق من وجود أوراق
+      await loadAllSchools();
+      await loadSchoolsList();
+      showAlert('تم التحقق وتحميل البيانات المحلية/الخادمية (إن وجدت).','success');
+    }
+
+    // إعادة تعيين النموذج
+    function resetForm(){
+      document.getElementById('attendance-body').innerHTML = '';
+      document.getElementById('attendance-section').style.display = 'none';
+      document.getElementById('verification-result').innerHTML = '';
+      setCurrentDate();
+    }
+  </script>
 </body>
 </html>
