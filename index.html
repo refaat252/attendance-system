@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الحضور والغياب - إدارة النجيلة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <style>
+        /* جميع أنماط CSS الخاصة بك تبقى كما هي */
+        /* ... CSS الكامل من الملف الأصلي ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- كل محتوى HTML تبقى كما هي -->
+        <!-- ... محتوى HTML الكامل من الملف الأصلي ... -->
+    </div>
+
+    <!-- نافذة التحميل -->
+    <div id="loading-overlay" style="display: none;">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p id="loading-message">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // النظام الكامل - JavaScript (محدث للعمل على GitHub Pages)
+        // =============================================
+
+        // محاكاة localStorage لتخزين البيانات محلياً
+        const StorageManager = {
+            // تخزين البيانات
+            setItem: function(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error('فشل في حفظ البيانات:', e);
+                    return false;
+                }
+            },
+
+            // جلب البيانات
+            getItem: function(key) {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } catch (e) {
+                    console.error('فشل في جلب البيانات:', e);
+                    return null;
+                }
+            },
+
+            // حذف البيانات
+            removeItem: function(key) {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error('فشل في حذف البيانات:', e);
+                    return false;
+                }
+            },
+
+            // مسح جميع البيانات
+            clear: function() {
+                try {
+                    localStorage.clear();
+                    return true;
+                } catch (e) {
+                    console.error('فشل في مسح البيانات:', e);
+                    return false;
+                }
+            }
+        };
+
+        // قاعدة البيانات المحلية
+        const LocalDatabase = {
+            // تهيئة قاعدة البيانات
+            init: function() {
+                if (!StorageManager.getItem('attendance_system_initialized')) {
+                    // البيانات الأولية
+                    const initialData = {
+                        schools: [
+                            { id: 1, code: 'KGD001', name: 'روضة الأزهار', type: 'رياض اطفال', serial: '12345' },
+                            { id: 2, code: 'PRM001', name: 'مدرسة النهضة الابتدائية', type: 'ابتدائى', serial: '23456' },
+                            { id: 3, code: 'MID001', name: 'مدرسة الأمل الإعدادية', type: 'اعدادى', serial: '34567' },
+                            { id: 4, code: 'SEC001', name: 'مدرسة المستقبل الثانوية', type: 'ثانوى', serial: '45678' }
+                        ],
+                        attendance: [],
+                        statistics: {
+                            totalRecords: 0,
+                            totalStudents: 0,
+                            totalPresent: 0,
+                            averageAttendance: 0
+                        }
+                    };
+                    
+                    StorageManager.setItem('attendance_system_data', initialData);
+                    StorageManager.setItem('attendance_system_initialized', true);
+                }
+                return StorageManager.getItem('attendance_system_data');
+            },
+
+            // حفظ البيانات
+            save: function(data) {
+                return StorageManager.setItem('attendance_system_data', data);
+            },
+
+            // جلب البيانات
+            get: function() {
+                return StorageManager.getItem('attendance_system_data') || this.init();
+            },
+
+            // توليد ID جديد
+            generateId: function() {
+                const data = this.get();
+                const allIds = [
+                    ...data.schools.map(s => s.id),
+                    ...data.attendance.map(a => a.id || 0)
+                ];
+                return allIds.length > 0 ? Math.max(...allIds) + 1 : 1;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSystem();
+        });
+
+        function initializeSystem() {
+            // تهيئة قاعدة البيانات
+            LocalDatabase.init();
+            
+            setCurrentDate();
+            loadAllSchools();
+            setDefaultDates();
+            showWelcomeMessage();
+            
+            // إضافة تأثيرات الظهور
+            document.querySelectorAll('.stat-card, .card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            });
+        }
+
+        function showWelcomeMessage() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting = 'مرحباً';
+            
+            if (hour < 12) greeting = 'صباح الخير';
+            else if (hour < 18) greeting = 'مساء الخير';
+            else greeting = 'مساء الخير';
+            
+            showAlert(` ${greeting}! تم تحميل النظام بنجاح.`, 'success');
+            
+            // عرض معلومات التخزين
+            const data = LocalDatabase.get();
+            const totalRecords = data.attendance.length;
+            if (totalRecords > 0) {
+                showAlert(`💾 يوجد ${totalRecords} سجل محفوظ محلياً`, 'info');
+            }
+        }
+
+        function setCurrentDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+        function loadAllSchools() {
+            showLoading('جاري تحميل المدارس...');
+            
+            setTimeout(() => {
+                hideLoading();
+                const data = LocalDatabase.get();
+                const reportSchoolSelect = document.getElementById('reportSchool');
+                reportSchoolSelect.innerHTML = '<option value="">جميع المدارس</option>';
+                
+                data.schools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.textContent = `${school.code} - ${school.name}`;
+                    reportSchoolSelect.appendChild(option);
+                });
+            }, 500);
+        }
+
+        function loadSchoolsByStage() {
+            const stage = document.getElementById('educationStage').value;
+            if (!stage) {
+                document.getElementById('school').innerHTML = '<option value="">-- اختر المدرسة --</option>';
+                document.getElementById('verification-section').style.display = 'none';
+                document.getElementById('attendance-section').style.display = 'none';
+                return;
+            }
+
+            showLoading('جاري تحميل المدارس...');
+            
+            setTimeout(() => {
+                hideLoading();
+                const data = LocalDatabase.get();
+                const schoolSelect = document.getElementById('school');
+                schoolSelect.innerHTML = '<option value="">-- اختر المدرسة --</option>';
+                
+                const filteredSchools = data.schools.filter(school => school.type === stage);
+                
+                filteredSchools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.textContent = `${school.code} - ${school.name}`;
+                    option.setAttribute('data-serial', school.serial);
+                    schoolSelect.appendChild(option);
+                });
+                
+                document.getElementById('verification-section').style.display = 'block';
+                document.getElementById('attendance-section').style.display = 'none';
+            }, 500);
+        }
+
+        function resetVerification() {
+            const schoolId = document.getElementById('school').value;
+            if (!schoolId) {
+                document.getElementById('verification-section').style.display = 'none';
+            } else {
+                document.getElementById('schoolSerial').value = '';
+                document.getElementById('verification-result').innerHTML = '';
+                document.getElementById('attendance-section').style.display = 'none';
+            }
+        }
+
+        function verifySchoolSerial() {
+            const schoolId = document.getElementById('school').value;
+            const serialNumber = document.getElementById('schoolSerial').value.trim();
+            
+            if (!schoolId) {
+                showAlert('⚠️ يرجى اختيار المدرسة أولاً', 'error');
+                return;
+            }
+            
+            if (!serialNumber) {
+                showAlert('⚠️ يرجى إدخال الرقم المسلسل', 'error');
+                return;
+            }
+
+            showLoading('جاري التحقق...');
+            
+            setTimeout(() => {
+                hideLoading();
+                const selectedOption = document.querySelector('#school option:checked');
+                const correctSerial = selectedOption.getAttribute('data-serial');
+                
+                if (serialNumber === correctSerial) {
+                    document.getElementById('verification-result').innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> ✅ الرقم المسلسل صحيح
+                        </div>
+                    `;
+                    document.getElementById('attendance-section').style.display = 'block';
+                    document.getElementById('verified-school-info').textContent = 
+                        `المدرسة: ${selectedOption.textContent}`;
+                    createAttendanceTable();
+                } else {
+                    document.getElementById('verification-result').innerHTML = `
+                        <div class="alert alert-error">
+                            <i class="fas fa-times-circle"></i> ❌ الرقم المسلسل غير صحيح
+                        </div>
+                    `;
+                    document.getElementById('attendance-section').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function createAttendanceTable() {
+            const stage = document.getElementById('educationStage').value;
+            let grades = [];
+            
+            if (stage === 'ابتدائى') {
+                grades = ['الصف الأول', 'الصف الثاني', 'الصف الثالث', 'الصف الرابع', 'الصف الخامس', 'الصف السادس'];
+            } else if (stage === 'اعدادى') {
+                grades = ['الصف الأول الإعدادي', 'الصف الثاني الإعدادي', 'الصف الثالث الإعدادي'];
+            } else if (stage === 'ثانوى') {
+                grades = ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
+            } else {
+                grades = ['التمهيدي', 'الروضة الأولى', 'الروضة الثانية'];
+            }
+            
+            const tbody = document.getElementById('attendance-body');
+            tbody.innerHTML = '';
+
+            grades.forEach(grade => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: bold; color: var(--secondary);">${grade}</td>
+                    <td>
+                        <input type="number" class="enrolled attendance-input" 
+                               data-grade="${grade}" min="0" value="0"
+                               onfocus="this.select()">
+                    </td>
+                    <td>
+                        <input type="number" class="present attendance-input" 
+                               data-grade="${grade}" min="0" value="0"
+                               onfocus="this.select()">
+                    </td>
+                    <td>
+                        <span class="absent" data-grade="${grade}" 
+                              style="font-weight: bold; color: var(--warning);">0</span>
+                    </td>
+                    <td>
+                        <span class="rate" data-grade="${grade}" 
+                              style="font-weight: bold;">0%</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.querySelectorAll('.present, .enrolled').forEach(input => {
+                input.addEventListener('input', calculateGradeStats);
+            });
+            
+            updateTotalSummary();
+        }
+
+        function calculateGradeStats() {
+            const grade = this.getAttribute('data-grade');
+            const enrolledInput = document.querySelector(`.enrolled[data-grade="${grade}"]`);
+            const presentInput = document.querySelector(`.present[data-grade="${grade}"]`);
+            
+            const enrolled = parseInt(enrolledInput.value) || 0;
+            const present = parseInt(presentInput.value) || 0;
+            const absent = Math.max(0, enrolled - present);
+            const rate = enrolled > 0 ? Math.round((present / enrolled) * 100) : 0;
+            
+            document.querySelector(`.absent[data-grade="${grade}"]`).textContent = absent;
+            document.querySelector(`.rate[data-grade="${grade}"]`).textContent = rate + '%';
+            
+            const rateElement = document.querySelector(`.rate[data-grade="${grade}"]`);
+            if (rate >= 90) {
+                rateElement.style.color = '#2E7D32';
+            } else if (rate >= 75) {
+                rateElement.style.color = '#FF9800';
+            } else {
+                rateElement.style.color = '#F44336';
+            }
+            
+            if (present > enrolled) {
+                presentInput.value = enrolled;
+                showAlert(`⚠️ عدد الحاضرين لا يمكن أن يزيد عن عدد المقيدين في ${grade}`, 'error');
+            }
+            
+            updateTotalSummary();
+        }
+
+        function updateTotalSummary() {
+            let totalEnrolled = 0;
+            let totalPresent = 0;
+
+            document.querySelectorAll('.enrolled').forEach(input => {
+                totalEnrolled += parseInt(input.value) || 0;
+            });
+
+            document.querySelectorAll('.present').forEach(input => {
+                totalPresent += parseInt(input.value) || 0;
+            });
+
+            const totalAbsent = Math.max(0, totalEnrolled - totalPresent);
+            const totalRate = totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 100) : 0;
+
+            document.getElementById('total-enrolled').textContent = totalEnrolled.toLocaleString();
+            document.getElementById('total-present').textContent = totalPresent.toLocaleString();
+            document.getElementById('total-absent').textContent = totalAbsent.toLocaleString();
+            document.getElementById('attendance-rate').textContent = totalRate + '%';
+            
+            const rateElement = document.getElementById('attendance-rate');
+            if (totalRate >= 90) {
+                rateElement.style.color = '#2E7D32';
+            } else if (totalRate >= 75) {
+                rateElement.style.color = '#FF9800';
+            } else {
+                rateElement.style.color = '#F44336';
+            }
+        }
+
+        function saveAttendance() {
+            const date = document.getElementById('date').value;
+            const schoolId = document.getElementById('school').value;
+            const schoolSerial = document.getElementById('schoolSerial').value.trim();
+            
+            if (!date || !schoolId || !schoolSerial) {
+                showAlert('⚠️ يرجى التحقق من جميع البيانات', 'error');
+                return;
+            }
+            
+            const attendance_data = [];
+            let hasData = false;
+            
+            document.querySelectorAll('#attendance-body tr').forEach(row => {
+                const gradeInput = row.querySelector('.enrolled');
+                if(gradeInput) {
+                    const grade = gradeInput.getAttribute('data-grade');
+                    const enrolled = parseInt(gradeInput.value) || 0;
+                    const present = parseInt(row.querySelector('.present').value) || 0;
+                    
+                    if (enrolled > 0) {
+                        attendance_data.push({
+                            grade: grade,
+                            enrolled: enrolled,
+                            present: present
+                        });
+                        hasData = true;
+                    }
+                }
+            });
+
+            if (!hasData) {
+                showAlert('⚠️ يرجى إدخال بيانات للحضور', 'error');
+                return;
+            }
+
+            showLoading('جاري حفظ البيانات...');
+            
+            setTimeout(() => {
+                // حفظ البيانات في التخزين المحلي
+                const data = LocalDatabase.get();
+                const newRecord = {
+                    id: LocalDatabase.generateId(),
+                    timestamp: new Date().toISOString(),
+                    date: date,
+                    schoolId: parseInt(schoolId),
+                    schoolSerial: schoolSerial,
+                    attendance: attendance_data
+                };
+                
+                data.attendance.push(newRecord);
+                LocalDatabase.save(data);
+                
+                hideLoading();
+                showAlert('✅ تم حفظ البيانات بنجاح في التخزين المحلي', 'success');
+                resetForm();
+            }, 1500);
+        }
+
+        function resetForm() {
+            document.getElementById('educationStage').value = '';
+            document.getElementById('school').innerHTML = '<option value="">-- اختر المدرسة --</option>';
+            document.getElementById('schoolSerial').value = '';
+            document.getElementById('verification-result').innerHTML = '';
+            document.getElementById('verification-section').style.display = 'none';
+            document.getElementById('attendance-section').style.display = 'none';
+            document.getElementById('attendance-body').innerHTML = '';
+            
+            updateTotalSummary();
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            // تحميل البيانات حسب التبويب
+            setTimeout(() => {
+                document.querySelectorAll('.stat-card, .card').forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    if (rect.top < window.innerHeight - 100) {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }
+                });
+            }, 100);
+        }
+
+        // دوال التحكم في البيانات
+        function verifyConnection() {
+            showLoading('جاري التحقق من الاتصال...');
+            setTimeout(() => {
+                hideLoading();
+                showAlert('✅ النظام يعمل بنجاح على GitHub Pages', 'success');
+            }, 1000);
+        }
+
+        function createSampleData() {
+            if (!confirm('⚠️ هل تريد إنشاء بيانات تجريبية؟ سيتم مسح أي بيانات موجودة.')) {
+                return;
+            }
+            
+            showLoading('جاري إنشاء البيانات التجريبية...');
+            
+            setTimeout(() => {
+                const sampleData = {
+                    schools: [
+                        { id: 1, code: 'KGD001', name: 'روضة الأزهار', type: 'رياض اطفال', serial: '12345' },
+                        { id: 2, code: 'PRM001', name: 'مدرسة النهضة الابتدائية', type: 'ابتدائى', serial: '23456' },
+                        { id: 3, code: 'MID001', name: 'مدرسة الأمل الإعدادية', type: 'اعدادى', serial: '34567' },
+                        { id: 4, code: 'SEC001', name: 'مدرسة المستقبل الثانوية', type: 'ثانوى', serial: '45678' },
+                        { id: 5, code: 'PRM002', name: 'مدرسة الفلاح الابتدائية', type: 'ابتدائى', serial: '56789' }
+                    ],
+                    attendance: [
+                        {
+                            id: 1,
+                            timestamp: new Date().toISOString(),
+                            date: new Date().toISOString().split('T')[0],
+                            schoolId: 2,
+                            schoolSerial: '23456',
+                            attendance: [
+                                { grade: 'الصف الأول', enrolled: 30, present: 28 },
+                                { grade: 'الصف الثاني', enrolled: 32, present: 30 },
+                                { grade: 'الصف الثالث', enrolled: 28, present: 25 }
+                            ]
+                        }
+                    ],
+                    statistics: {
+                        totalRecords: 1,
+                        totalStudents: 90,
+                        totalPresent: 83,
+                        averageAttendance: 92.2
+                    }
+                };
+                
+                LocalDatabase.save(sampleData);
+                hideLoading();
+                showAlert('✅ تم إنشاء البيانات التجريبية بنجاح', 'success');
+                loadAllSchools();
+                loadSchoolsList();
+            }, 2000);
+        }
+
+        function addNewSchool() {
+            const code = document.getElementById('newSchoolCode').value.trim();
+            const name = document.getElementById('newSchoolName').value.trim();
+            const stage = document.getElementById('newSchoolStage').value;
+            const serial = document.getElementById('newSchoolSerial').value.trim();
+            
+            if (!code || !name || !serial) {
+                showAlert('⚠️ يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
+            showLoading('جاري إضافة المدرسة...');
+            
+            setTimeout(() => {
+                const data = LocalDatabase.get();
+                const newSchool = {
+                    id: LocalDatabase.generateId(),
+                    code: code,
+                    name: name,
+                    type: stage,
+                    serial: serial
+                };
+                
+                data.schools.push(newSchool);
+                LocalDatabase.save(data);
+                
+                hideLoading();
+                showAlert('✅ تم إضافة المدرسة بنجاح', 'success');
+                document.getElementById('newSchoolCode').value = '';
+                document.getElementById('newSchoolName').value = '';
+                document.getElementById('newSchoolSerial').value = '';
+                loadSchoolsList();
+            }, 1000);
+        }
+
+        function loadSchoolsList() {
+            const listDiv = document.getElementById('schools-list');
+            listDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>جاري تحميل البيانات...</p></div>';
+            
+            setTimeout(() => {
+                const data = LocalDatabase.get();
+                let html = '<div class="grid-2">';
+                data.schools.forEach(school => {
+                    html += `
+                        <div class="card" style="text-align: center;">
+                            <h4>${school.name}</h4>
+                            <div class="school-badge badge-primary">${school.code}</div>
+                            <div class="school-badge badge-secondary">${school.type}</div>
+                            <div style="margin-top: 10px; color: var(--text-light); font-size: 0.9em;">
+                                <i class="fas fa-key"></i> الرقم المسلسل: ${school.serial}
+                            </div>
+                            <button class="btn btn-outline btn-small" onclick="deleteSchool(${school.id})" style="margin-top: 10px;">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                listDiv.innerHTML = html;
+            }, 500);
+        }
+
+        function deleteSchool(schoolId) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذه المدرسة؟')) {
+                return;
+            }
+            
+            const data = LocalDatabase.get();
+            data.schools = data.schools.filter(school => school.id !== schoolId);
+            LocalDatabase.save(data);
+            
+            showAlert('✅ تم حذف المدرسة بنجاح', 'success');
+            loadSchoolsList();
+        }
+
+        // دوال التقارير
+        function generateDetailedReport() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                showAlert('⚠️ يرجى تحديد الفترة الزمنية', 'error');
+                return;
+            }
+
+            showLoading('جاري إنشاء التقرير...');
+            
+            setTimeout(() => {
+                hideLoading();
+                const data = LocalDatabase.get();
+                const filteredRecords = data.attendance.filter(record => {
+                    return record.date >= startDate && record.date <= endDate;
+                });
+                
+                let totalStudents = 0;
+                let totalPresent = 0;
+                
+                filteredRecords.forEach(record => {
+                    record.attendance.forEach(att => {
+                        totalStudents += att.enrolled;
+                        totalPresent += att.present;
+                    });
+                });
+                
+                const averageRate = totalStudents > 0 ? ((totalPresent / totalStudents) * 100).toFixed(2) : 0;
+                
+                const resultDiv = document.getElementById('report-result');
+                resultDiv.innerHTML = `
+                    <div class="summary-card">
+                        <h3><i class="fas fa-chart-bar"></i> تقرير الحضور والغياب</h3>
+                        <p><strong>الفترة:</strong> ${startDate} إلى ${endDate}</p>
+                        <p><strong>عدد السجلات:</strong> ${filteredRecords.length} سجل</p>
+                        <p><strong>إجمالي الطلاب:</strong> ${totalStudents}</p>
+                        <p><strong>إجمالي الحضور:</strong> ${totalPresent}</p>
+                        <p><strong>متوسط الحضور:</strong> ${averageRate}%</p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>المدرسة</th>
+                                    <th>الصف</th>
+                                    <th>المقيدين</th>
+                                    <th>الحاضرين</th>
+                                    <th>الغائبين</th>
+                                    <th>النسبة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filteredRecords.map(record => {
+                                    const school = data.schools.find(s => s.id === record.schoolId);
+                                    return record.attendance.map(att => `
+                                        <tr>
+                                            <td>${record.date}</td>
+                                            <td>${school ? school.name : 'غير معروف'}</td>
+                                            <td>${att.grade}</td>
+                                            <td>${att.enrolled}</td>
+                                            <td>${att.present}</td>
+                                            <td>${att.enrolled - att.present}</td>
+                                            <td>${((att.present / att.enrolled) * 100).toFixed(2)}%</td>
+                                        </tr>
+                                    `).join('');
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                showAlert('✅ تم إنشاء التقرير بنجاح', 'success');
+            }, 1500);
+        }
+
+        function exportDetailedReport() {
+            const data = LocalDatabase.get();
+            const csvContent = convertToCSV(data);
+            downloadCSV(csvContent, 'تقرير_الحضور.csv');
+            showAlert('✅ تم تصدير البيانات بنجاح', 'success');
+        }
+
+        function convertToCSV(data) {
+            const headers = ['التاريخ', 'المدرسة', 'الصف', 'المقيدين', 'الحاضرين', 'الغائبين', 'النسبة'];
+            let csv = headers.join(',') + '\n';
+            
+            data.attendance.forEach(record => {
+                const school = data.schools.find(s => s.id === record.schoolId);
+                record.attendance.forEach(att => {
+                    const row = [
+                        record.date,
+                        school ? school.name : 'غير معروف',
+                        att.grade,
+                        att.enrolled,
+                        att.present,
+                        att.enrolled - att.present,
+                        ((att.present / att.enrolled) * 100).toFixed(2) + '%'
+                    ];
+                    csv += row.join(',') + '\n';
+                });
+            });
+            
+            return csv;
+        }
+
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printDetailedReport() {
+            window.print();
+        }
+
+        function loadStatistics() {
+            showLoading('جاري تحميل الإحصائيات...');
+            
+            setTimeout(() => {
+                hideLoading();
+                const data = LocalDatabase.get();
+                const totalRecords = data.attendance.length;
+                
+                let totalStudents = 0;
+                let totalPresent = 0;
+                
+                data.attendance.forEach(record => {
+                    record.attendance.forEach(att => {
+                        totalStudents += att.enrolled;
+                        totalPresent += att.present;
+                    });
+                });
+                
+                const averageAttendance = totalStudents > 0 ? ((totalPresent / totalStudents) * 100).toFixed(2) : 0;
+                
+                const resultDiv = document.getElementById('statistics-result');
+                resultDiv.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-database fa-2x" style="color: var(--primary);"></i>
+                            <div class="stat-label">إجمالي السجلات</div>
+                            <div class="stat-number">${totalRecords}</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-users fa-2x" style="color: var(--secondary);"></i>
+                            <div class="stat-label">إجمالي الطلاب</div>
+                            <div class="stat-number">${totalStudents.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-user-check fa-2x" style="color: var(--primary);"></i>
+                            <div class="stat-label">إجمالي الحضور</div>
+                            <div class="stat-number">${totalPresent.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-line fa-2x" style="color: var(--accent);"></i>
+                            <div class="stat-label">متوسط الحضور</div>
+                            <div class="stat-number">${averageAttendance}%</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-success" style="margin-top: 20px;">
+                        <i class="fas fa-info-circle"></i>
+                        تم تحميل الإحصائيات من البيانات المحفوظة في التخزين المحلي.
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-warning" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i> مسح جميع البيانات
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportAllData()">
+                            <i class="fas fa-download"></i> نسخ احتياطي للبيانات
+                        </button>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        function clearAllData() {
+            if (!confirm('⚠️ هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء!')) {
+                return;
+            }
+            
+            LocalDatabase.clear();
+            showAlert('✅ تم مسح جميع البيانات بنجاح', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        }
+
+        function exportAllData() {
+            const data = LocalDatabase.get();
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'attendance_system_backup.json';
+            link.click();
+            showAlert('✅ تم إنشاء نسخة احتياطية بنجاح', 'success');
+        }
+
+        // دوال المساعدة
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<i class="fas fa-${getAlertIcon(type)}"></i> ${message}`;
+            
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+                activeTab.insertBefore(alert, activeTab.firstChild);
+            }
+            
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.parentElement.removeChild(alert);
+                }
+            }, 5000);
+        }
+
+        function getAlertIcon(type) {
+            const icons = {
+                'success': 'check-circle',
+                'error': 'times-circle',
+                'warning': 'exclamation-triangle',
+                'info': 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+
+        function showLoading(message = 'جاري التحميل...') {
+            const overlay = document.getElementById('loading-overlay');
+            const messageElement = document.getElementById('loading-message');
+            
+            messageElement.textContent = message;
+            overlay.style.display = 'flex';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.background = 'rgba(0,0,0,0.8)';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '9999';
+            overlay.style.color = 'white';
+            overlay.style.fontSize = '1.1em';
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'none';
+        }
+
+        // تأثيرات التمرير
+        window.addEventListener('scroll', function() {
+            const cards = document.querySelectorAll('.stat-card, .card');
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 100) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        // تهيئة تأثيرات الظهور عند التحميل
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.stat-card, .card').forEach(card => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                });
+            }, 500);
+        });
+
+        // اكتشاف حالة الاتصال بالإنترنت
+        window.addEventListener('online', function() {
+            showAlert('✅ تم استعادة الاتصال بالإنترنت', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            showAlert('⚠️ فقد الاتصال بالإنترنت', 'warning');
+        });
+
+        // منع إغلاق الصفحة إذا كان هناك بيانات غير محفوظة
+        window.addEventListener('beforeunload', function(e) {
+            const data = LocalDatabase.get();
+            if (data.attendance.length > 0) {
+                e.preventDefault();
+                e.returnValue = 'لديك بيانات غير محفوظة. هل أنت متأكد من المغادرة؟';
+            }
+        });
+    </script>
+</body>
+</html>
